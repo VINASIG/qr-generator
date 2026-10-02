@@ -353,6 +353,53 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
   await capture(page, info, 'wifi-open-network');
 });
 
+test('clearing Wi-Fi resets the visible mode and removes all entered data', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(app.url);
+  await page
+    .getByRole('textbox', { name: 'Link or text' })
+    .fill('Previous text');
+  await page.getByRole('radio', { name: 'Wi-Fi', exact: true }).check();
+  await page
+    .getByLabel('Network name', { exact: true })
+    .fill('Fixture network');
+  await page
+    .getByLabel('Password', { exact: true })
+    .fill('fixture-password-only');
+  await page.getByLabel('Show password', { exact: true }).check();
+  await page.getByLabel('Hidden network', { exact: true }).check();
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText('Your QR code is ready');
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await capture(page, info, 'cleared-from-wifi');
+  const text = page.getByRole('textbox', { name: 'Link or text' });
+  await expect(
+    page.getByRole('radio', { name: 'URL or text', exact: true }),
+  ).toBeChecked();
+  await expect(text).toBeVisible();
+  await expect(text).toBeEnabled();
+  await expect(text).toHaveValue('');
+  await expect(text).toBeFocused();
+  await expect(page.locator('#ssid')).toHaveValue('');
+  await expect(page.locator('#password')).toHaveValue('');
+  await expect(page.locator('#show-password')).not.toBeChecked();
+  await expect(page.locator('#hidden-network')).not.toBeChecked();
+  await expect(page.locator('#wifi-fields')).toBeHidden();
+  await expect(page.locator('#encoded-content')).toHaveText('');
+  await expect(
+    page.getByRole('button', { name: 'Download PNG', exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'Download SVG', exact: true }),
+  ).toBeDisabled();
+  await generate(page, 'After clearing');
+  expect(decodePng(await download(page, 'PNG')).text).toBe('After clearing');
+});
+
 test('all PNG sizes and content capacity', async ({ page }) => {
   await page.goto(app.url);
   for (const pixels of [512, 1024, 2048]) {

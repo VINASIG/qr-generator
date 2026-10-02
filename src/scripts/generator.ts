@@ -199,11 +199,12 @@ size.addEventListener('change', () => {
 });
 form.addEventListener('reset', () => {
   invalidate();
-  queueMicrotask(() => {
+  // Read the default radio values after the native reset action completes.
+  window.setTimeout(() => {
     updateFields();
     message('Your content stays in this browser.');
     content.focus();
-  });
+  }, 0);
 });
 pngButton.addEventListener('click', () => {
   download(png, 'png');
