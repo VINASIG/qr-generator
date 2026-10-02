@@ -114,7 +114,6 @@ const asset = (name: string) => base + name;
                 <label for="content">Link or text</label>
                 <textarea
                   id="content"
-                  name="content"
                   rows="4"
                   placeholder="https://example.com"
                   spellcheck="false"
@@ -131,14 +130,13 @@ const asset = (name: string) => base + name;
                 <label for="ssid">Network name</label>
                 <input
                   id="ssid"
-                  name="ssid"
                   type="text"
                   autocomplete="off"
                   spellcheck="false"
                   aria-describedby="form-status"
                 />
                 <label for="security">Security</label>
-                <select id="security" name="security">
+                <select id="security">
                   <option value="WPA">WPA or WPA2 personal</option>
                   <option value="WEP">WEP</option>
                   <option value="nopass">Open network</option>
@@ -147,7 +145,6 @@ const asset = (name: string) => base + name;
                   <label for="password">Password</label>
                   <input
                     id="password"
-                    name="password"
                     type="password"
                     autocomplete="new-password"
                     spellcheck="false"
@@ -158,8 +155,7 @@ const asset = (name: string) => base + name;
                   </label>
                 </div>
                 <label class="check-label">
-                  <input id="hidden-network" name="hidden" type="checkbox" />{' '}
-                  Hidden network
+                  <input id="hidden-network" type="checkbox" /> Hidden network
                 </label>
                 <p id="wifi-help" class="supporting">
                   Anyone with this code can read its Wi-Fi details. Keep the
@@ -167,7 +163,7 @@ const asset = (name: string) => base + name;
                 </p>
               </fieldset>
               <div class="form-actions">
-                <button id="generate" class="primary" type="submit">
+                <button id="generate" class="primary" type="submit" disabled>
                   Create QR code
                 </button>
                 <button id="clear" class="quiet" type="reset">

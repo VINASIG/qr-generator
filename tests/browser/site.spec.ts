@@ -38,28 +38,38 @@ async function capture(
   info: TestInfo,
   state: string,
   scroll = true,
+  scriptEnabled = true,
 ): Promise<void> {
   const viewport = page.viewportSize();
   assert(viewport);
-  await page.evaluate(async (shouldScroll) => {
-    await document.fonts.ready;
-    if (shouldScroll) {
-      // Let the compositor paint each scroll before a full-page capture.
-      // Chromium can reject a capture while an instant scroll is pending.
-      const painted = () =>
-        new Promise<void>((resolve) =>
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => {
-              resolve();
-            }),
-          ),
-        );
-      window.scrollTo(0, document.documentElement.scrollHeight);
-      await painted();
-      window.scrollTo(0, 0);
-      await painted();
-    }
-  }, scroll);
+  if (!scriptEnabled && scroll) {
+    // Disabled page scripts cannot service animation-frame callbacks.
+    await page.mouse.wheel(0, 10000);
+    await expect(page.getByRole('contentinfo')).toBeInViewport();
+    await page.mouse.wheel(0, -10000);
+    await expect(
+      page.getByRole('heading', { name: 'QR Generator', exact: true }),
+    ).toBeInViewport();
+  } else if (scriptEnabled)
+    await page.evaluate(async (shouldScroll) => {
+      await document.fonts.ready;
+      if (shouldScroll) {
+        // Let the compositor paint each scroll before a full-page capture.
+        // Chromium can reject a capture while an instant scroll is pending.
+        const painted = () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                resolve();
+              }),
+            ),
+          );
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        await painted();
+        window.scrollTo(0, 0);
+        await painted();
+      }
+    }, scroll);
   const geometry = await page.evaluate(() => ({
     width: innerWidth,
     html: document.documentElement.scrollWidth,
@@ -456,6 +466,65 @@ test('keyboard, native selection and touch work without hover', async ({
     expect(box.height).toBeGreaterThanOrEqual(44);
   } finally {
     await context.close();
+  }
+});
+
+test('unavailable client script cannot submit QR content to the host', async ({
+  browser,
+}, info) => {
+  for (const unavailable of ['disabled', 'blocked'] as const) {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      javaScriptEnabled: unavailable !== 'disabled',
+    });
+    const page = await context.newPage();
+    const requests: string[] = [];
+    page.on('request', (request) => requests.push(request.url()));
+    try {
+      if (unavailable === 'blocked')
+        await page.route(/\/_astro\/[^/]+\.js$/u, (route) =>
+          route.abort('blockedbyclient'),
+        );
+      await page.goto(app.url);
+      const content = page.getByRole('textbox', { name: 'Link or text' });
+      await content.fill('synthetic-privacy-fixture');
+      const create = page.getByRole('button', {
+        name: 'Create QR code',
+        exact: true,
+      });
+      await expect(create).toBeDisabled();
+      for (const id of [
+        'content',
+        'ssid',
+        'password',
+        'security',
+        'hidden-network',
+      ])
+        await expect(page.locator('#' + id)).not.toHaveAttribute('name', /./u);
+      await create.click({ force: true });
+      await content.press('Enter');
+      await capture(
+        page,
+        info,
+        'script-' + unavailable,
+        true,
+        unavailable !== 'disabled',
+      );
+      expect(page.url()).toBe(app.url);
+      expect(
+        requests.some((request) =>
+          request.includes('synthetic-privacy-fixture'),
+        ),
+      ).toBe(false);
+      await expect(
+        page.getByRole('button', { name: 'Download PNG', exact: true }),
+      ).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Download SVG', exact: true }),
+      ).toBeDisabled();
+    } finally {
+      await context.close();
+    }
   }
 });
 

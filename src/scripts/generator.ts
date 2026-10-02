@@ -218,3 +218,4 @@ window.addEventListener('pagehide', () => {
   downloads.clear();
 });
 updateFields();
+generate.disabled = false;
