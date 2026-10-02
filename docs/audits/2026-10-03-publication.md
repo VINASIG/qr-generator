@@ -46,6 +46,8 @@ Raw before/after lab reports and metadata are retained in `output/lighthouse/`. 
 
 ## Publication verification
 
+The first Linux CI attempt passed 131 of 132 browser tests. Chromium rejected one idle full-page capture with `Page.captureScreenshot: Unable to capture screenshot`, before the rest of that case ran. The helper requested a full-page capture immediately after scrolling to the bottom. It now waits for compositor frames after scrolling through the page and again after returning to the top. Hover-frame captures retain their separate path. All geometry, decoding, accessibility and state assertions remain, with zero automatic retries. The original CI report and trace are retained under `output/publication/ci-first-linux/`.
+
 This audit is prepared before the publication commit. Exact-commit CI, deployment and live-site verification are NOT_RUN at this preparation point. The workflow runs source, unit, build and all three browser engines on Windows and Linux, then Linux performance budgets, and deploys only after both jobs pass. Pull requests do not deploy and have read-only source permissions.
 
 After the authorized commit and push, verify remote HEAD, both exact-commit jobs, the Pages deployment SHA and anonymous public access. Download the CI reports, inspect Firefox screenshots and verify public resource bytes and actual live browser exports. Keep the final machine-readable receipts under ignored `output/publication/`. [GitHub Actions](https://github.com/VINASIG/qr-generator/actions) provides public workflow results for subsequent changes.

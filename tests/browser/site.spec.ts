@@ -43,7 +43,22 @@ async function capture(
   assert(viewport);
   await page.evaluate(async (shouldScroll) => {
     await document.fonts.ready;
-    if (shouldScroll) window.scrollTo(0, document.documentElement.scrollHeight);
+    if (shouldScroll) {
+      // Let the compositor paint each scroll before a full-page capture.
+      // Chromium can reject a capture while an instant scroll is pending.
+      const painted = () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              resolve();
+            }),
+          ),
+        );
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      await painted();
+      window.scrollTo(0, 0);
+      await painted();
+    }
   }, scroll);
   const geometry = await page.evaluate(() => ({
     width: innerWidth,
