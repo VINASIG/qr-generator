@@ -1,0 +1,291 @@
+---
+import { Download, QrCode } from '@lucide/astro';
+import '../styles/tokens.css';
+import '../styles/app.css';
+const configuredBase = import.meta.env.BASE_URL;
+const base = configuredBase.endsWith('/')
+  ? configuredBase
+  : configuredBase + '/';
+const asset = (name: string) => base + name;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VINASIG QR Generator - Static QR codes, no signup</title>
+    <meta
+      name="description"
+      content="Create static QR codes for links, text and Wi-Fi in your browser. Download PNG or SVG without an account, uploads or a tracking redirect."
+    />
+    <meta name="theme-color" content="#f7f6f4" />
+    <link rel="canonical" href="https://vinasig.github.io/qr-generator/" />
+    <meta property="og:title" content="VINASIG QR Generator" />
+    <meta
+      property="og:description"
+      content="Traditional QR codes. Your content goes directly into the code. Download PNG or SVG."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vinasig.github.io/qr-generator/" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" type="image/svg+xml" href={asset('brand/mark.svg')} />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href={asset('brand/favicon-16.png')}
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href={asset('brand/favicon-32.png')}
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href={asset('brand/favicon-48.png')}
+    />
+    <link
+      rel="preload"
+      href={asset('fonts/SpaceGrotesk-VariableFont_wght.woff2')}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href={asset('fonts/font.css')} />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'VINASIG QR Generator',
+        url: 'https://vinasig.github.io/qr-generator/',
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'Web browser',
+        description:
+          'Create static QR codes for links, text and Wi-Fi locally. Download PNG and SVG without an account.',
+      })}
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      Skip to generator
+    </a>
+    <div class="app-shell">
+      <header class="site-header">
+        <a
+          class="brand"
+          href="https://github.com/VINASIG"
+          aria-label="VINASIG on GitHub"
+        >
+          <img
+            src={asset('brand/primary-color.svg')}
+            width="132"
+            height="32"
+            alt="VINASIG"
+          />
+        </a>
+        <a href="https://github.com/VINASIG/qr-generator">View source</a>
+      </header>
+      <main id="main" tabindex="-1">
+        <div class="intro">
+          <h1>QR Generator</h1>
+          <p class="lead">Your content. Straight into a QR code.</p>
+          <p>Create it here, keep it yours. No account or tracking redirect.</p>
+        </div>
+        <div class="workspace">
+          <section class="editor" aria-labelledby="content-heading">
+            <h2 id="content-heading">Create your code</h2>
+            <form id="qr-form" novalidate>
+              <fieldset class="content-type">
+                <legend>Content type</legend>
+                <label>
+                  <input type="radio" name="kind" value="text" checked /> URL or
+                  text
+                </label>
+                <label>
+                  <input type="radio" name="kind" value="wifi" /> Wi-Fi
+                </label>
+              </fieldset>
+              <div id="text-fields" class="fields">
+                <label for="content">Link or text</label>
+                <textarea
+                  id="content"
+                  name="content"
+                  rows="4"
+                  placeholder="https://example.com"
+                  spellcheck="false"
+                  autocomplete="off"
+                  aria-describedby="content-help form-status"
+                ></textarea>
+                <p id="content-help" class="supporting">
+                  Paste the complete link, or enter any text. We keep it exactly
+                  as entered.
+                </p>
+              </div>
+              <fieldset id="wifi-fields" class="fields" hidden disabled>
+                <legend class="visually-hidden">Wi-Fi details</legend>
+                <label for="ssid">Network name</label>
+                <input
+                  id="ssid"
+                  name="ssid"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="form-status"
+                />
+                <label for="security">Security</label>
+                <select id="security" name="security">
+                  <option value="WPA">WPA or WPA2 personal</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">Open network</option>
+                </select>
+                <div id="password-fields" class="fields">
+                  <label for="password">Password</label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="new-password"
+                    spellcheck="false"
+                    aria-describedby="wifi-help form-status"
+                  />
+                  <label class="check-label">
+                    <input id="show-password" type="checkbox" /> Show password
+                  </label>
+                </div>
+                <label class="check-label">
+                  <input id="hidden-network" name="hidden" type="checkbox" />{' '}
+                  Hidden network
+                </label>
+                <p id="wifi-help" class="supporting">
+                  Anyone with this code can read its Wi-Fi details. Keep the
+                  downloaded image private when needed.
+                </p>
+              </fieldset>
+              <div class="form-actions">
+                <button id="generate" class="primary" type="submit">
+                  Create QR code
+                </button>
+                <button id="clear" class="quiet" type="reset">
+                  Clear
+                </button>
+              </div>
+              <p
+                id="form-status"
+                class="status supporting"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                Your content stays in this browser.
+              </p>
+            </form>
+            <noscript>
+              <p>
+                Enable JavaScript to create a QR code locally in your browser.
+              </p>
+            </noscript>
+          </section>
+          <section
+            id="preview-panel"
+            class="preview"
+            aria-labelledby="preview-heading"
+            tabindex="-1"
+          >
+            <h2 id="preview-heading">Your QR code</h2>
+            <div class="qr-stage">
+              <div id="empty-preview" class="empty-preview">
+                <QrCode size={40} stroke-width={1.5} aria-hidden="true" />
+                <p>Your code will appear here.</p>
+              </div>
+              <img
+                id="qr-image"
+                src={asset('brand/mark.svg')}
+                width="280"
+                height="280"
+                alt="Generated QR code"
+                hidden
+              />
+            </div>
+            <div class="export-size">
+              <label for="image-size">PNG size</label>
+              <select id="image-size">
+                <option value="512">512 pixels</option>
+                <option value="1024" selected>
+                  1024 pixels
+                </option>
+                <option value="2048">2048 pixels</option>
+              </select>
+            </div>
+            <div class="download-actions">
+              <button id="download-png" class="primary" type="button" disabled>
+                <Download size={18} aria-hidden="true" />
+                Download PNG
+              </button>
+              <button
+                id="download-svg"
+                class="secondary"
+                type="button"
+                disabled
+              >
+                <Download size={18} aria-hidden="true" />
+                Download SVG
+              </button>
+            </div>
+            <p class="supporting export-help">
+              PNG for everyday use. SVG stays sharp at any print size.
+            </p>
+            <details id="encoded-details" hidden>
+              <summary>Encoded content</summary>
+              <p id="encoded-content"></p>
+            </details>
+          </section>
+        </div>
+        <section class="notes" aria-labelledby="notes-heading">
+          <h2 id="notes-heading" class="visually-hidden">
+            About your QR code
+          </h2>
+          <details>
+            <summary>Will my QR code expire?</summary>
+            <p>
+              The content is stored directly in the QR pattern. There is no
+              trial, subscription or VINASIG redirect to keep active. A linked
+              website can still move, expire or go offline. Editing a static
+              code requires creating and sharing a new image.
+            </p>
+          </details>
+          <details>
+            <summary>Before you print</summary>
+            <p>
+              Scan the downloaded image from another device and test a sample at
+              its final printed size. Keep the white border. Shorter links make
+              simpler codes, and black on white gives strong contrast.
+            </p>
+          </details>
+          <details>
+            <summary>What stays private?</summary>
+            <p>
+              Generation runs on your device. We do not upload your content,
+              save a history, set app cookies or add scan tracking. Website
+              hosting still receives normal page requests. The code itself
+              contains your content, so share sensitive codes with care.
+            </p>
+          </details>
+        </section>
+      </main>
+      <footer class="site-footer">
+        <p>A VINASIG tool. Made to stay simple.</p>
+        <a href="https://github.com/VINASIG/qr-generator/issues">
+          Report an issue
+        </a>
+      </footer>
+    </div>
+    <script>
+      import '../scripts/generator.ts';
+    </script>
+  </body>
+</html>

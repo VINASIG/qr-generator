@@ -1,0 +1,24 @@
+# Web design, responsive and accessibility
+
+## Sources and adoption
+
+WEB-001 MUST use the VINASIG web-design-system for tokens/components and vinasig-brand-assets for supplied artwork. Pin references in the project's asset/source record. Do not fork a competing design system, invent approved values, redraw VINASIG artwork, or grant its rights. The design system currently labels proposals as drafts. Adopt a proposal explicitly for a product and record that choice. The task already settles font and icon roles.
+
+- Space Grotesk is the sole named UI typeface, served locally with its OFL notice. Check Vietnamese glyphs, 300-700 weight support, font loading and fallback. A technical code block may use a documented platform monospace fallback for legibility. It does not change the UI font.
+- Lucide supplies interface SVG icons. Keep consistent size/stroke, import only used icons and name controls accessibly. Decorative SVGs stay out of the accessibility tree.
+- Simple Icons supplies third-party brand marks where appropriate. Library licensing does not waive brand rules. Prefer currentColor unless the context requires brand color. Provider sign-in buttons follow the provider's approved artwork and requirements. VINASIG artwork comes from its own archive.
+- Read the design system's element catalog, specimen and component guidance for the control being built. Preserve control type/behavior in references. Check both closed and open dropdown panels.
+
+WEB-002 SHOULD use the current Bright Playful Minimalism proposal when the consuming project adopts it. Keep flat content-led structure, neutral surfaces, measured type, clear spacing and purposeful identity accents. Preserve semantic tokens and identity anchors. Avoid default gradients, oversized hero text, empty card grids, decorative badges and ornamental illustrations. Do not copy Apple's whole visual identity to obtain subtle motion. The source typography and spacing values remain in the design-system repository, not a duplicated token library here.
+
+WEB-003 MUST keep essential content accessible, use semantic HTML and native controls when suitable, correct roles/names/states, form labels, visible focus, descriptive links and a working favicon across deployment base paths. Content and control usefulness decide visible UI elements; implementation badges and machine indexes are not mandatory product chrome. Inspect light/dark if supported.
+
+## Responsive evidence
+
+WEB-004 MUST test representative routes/templates and shared components at 360x800, 390x844, 768x1024, 1024x768 and 1440x900. Add 320 CSS px reflow, both sides of actual content breakpoints, intermediate widths, long/localized text, enlarged text and relevant landscape. Derive breakpoints from the project, not a fixed VINASIG device list.
+
+WEB-005 MUST scroll through the full page, capture AND open screenshots, inspect DOM/computed styles/bounds and use changed controls. Test applicable menus, overlays, form errors, loading, empty and long-content states. Fix intrinsic width, wrapping, sizing or positioning in source. Never hide page overflow, shrink the page with zoom/transform, hide content or remove functions to mask a defect. Mark genuinely intentional table/code/carousel horizontal scrolling. Automated no-overflow is one assertion, not visual approval.
+
+WEB-006 MUST select and document a Chromium/Firefox/WebKit support matrix, run relevant engines and report NOT_RUN engines honestly. Browser emulation is not a real phone. Visual baselines need inspected images and review before acceptance. Save immutable before/after evidence under output/responsive with route, viewport and state names.
+
+WEB-007 MUST target WCAG 2.2 AA for web. Combine axe-core with keyboard/focus and escape behavior, contrast, target usability, text enlargement/reflow and applicable assistive technology checks. An axe pass is a partial automated result. Record screen-reader/human checks separately when unavailable. The reusable Playwright helpers cover a baseline; consumer tests must add real flows and difficult states.

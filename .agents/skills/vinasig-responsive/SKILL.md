@@ -1,0 +1,14 @@
+---
+name: vinasig-responsive
+description: 'Implement and verify web responsive layout and accessibility with browser evidence. Use for visible UI/layout changes, not non-web tasks.'
+---
+
+Read `.vinasig/standards/policies/web.md` and the consuming profile. Inputs are changed routes, controls, supported browsers and existing server/test commands.
+
+Discover routes/templates and CSS breakpoints. Start/reuse the correct local app and derive its port from logs. Use one available browser driver; Playwright Test keeps reusable regression checks. Do not send destructive or real-data forms.
+
+Measure the five required viewports, 320 px reflow, actual breakpoint neighbors and intermediate widths. Scroll fully. Capture AND open before screenshots, inspect styles/bounds and test applicable open/closed controls, keyboard, errors/loading, long text, enlarged text and themes.
+
+Fix the source cause and shared components. Do not clip page overflow, transform-scale the page, hide content, or weaken an assertion. Repeat the same affected matrix after each group of fixes. Add role/name based regression checks using the local web templates where they fit. Run axe plus manual focus, keyboard, contrast/reflow checks. Axe alone is partial coverage.
+
+Output route/viewport/engine/state results, before/after evidence and tests, unrun device/assistive checks and concrete blockers. Chromium emulation never establishes real iPhone/Safari behavior. Review screenshot baselines before approving them.

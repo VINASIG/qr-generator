@@ -1,0 +1,7 @@
+* text=auto eol=lf
+.agents/** -text
+.vinasig/standards/** -text
+public/brand/** -text
+public/fonts/** -text
+public/fonts/OFL.txt -whitespace
+public/licenses/** -text -whitespace
