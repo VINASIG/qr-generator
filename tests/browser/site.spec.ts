@@ -44,13 +44,11 @@ async function capture(
   assert(viewport);
   if (!scriptEnabled && scroll) {
     // Disabled page scripts cannot service animation-frame callbacks.
-    const extent = await page.evaluate(
-      () => document.documentElement.scrollHeight,
-    );
-    await page.mouse.move(1, viewport.height / 2);
-    await page.mouse.wheel(0, extent);
+    await page.getByRole('contentinfo').scrollIntoViewIfNeeded();
     await expect(page.getByRole('contentinfo')).toBeInViewport();
-    await page.mouse.wheel(0, -extent);
+    await page
+      .getByRole('heading', { name: 'QR Generator', exact: true })
+      .scrollIntoViewIfNeeded();
     await expect(
       page.getByRole('heading', { name: 'QR Generator', exact: true }),
     ).toBeInViewport();
