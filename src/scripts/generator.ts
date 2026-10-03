@@ -24,6 +24,11 @@ import {
   phonePayload,
   smsPayload,
 } from '../lib/payloads';
+import { installSelects, focusControl } from './select-control';
+import { installDates } from './date-control';
+
+installSelects();
+installDates();
 
 function element<T extends HTMLElement>(id: string, kind: { new (): T }): T {
   const node = document.getElementById(id);
@@ -115,10 +120,10 @@ function updateFields(): void {
     time.disabled = allDay.checked || kind.value !== 'event';
   }
   timezone.textContent = allDay.checked
-    ? 'Start date is the first day; End date is the last day included. Times are not included in an all-day event.'
-    : "Times use this device's timezone (" +
+    ? 'Start date is the first day. End date is the last day included. Times are not included in an all-day event.'
+    : "Times use this device's timezone, " +
       Intl.DateTimeFormat().resolvedOptions().timeZone +
-      ') and are encoded in UTC.';
+      '. They are encoded as universal time.';
 }
 function selectedSize(): ImageSize {
   const value = Number(size.value);
@@ -261,7 +266,7 @@ async function create(): Promise<void> {
       'code-version':
         'Version ' +
         String(matrix.version) +
-        ' / ' +
+        ' - ' +
         String(matrix.size) +
         ' x ' +
         String(matrix.size),
@@ -304,7 +309,7 @@ async function create(): Promise<void> {
       disclosure = disclosure.parentElement?.closest('details') ?? null;
     }
     target.setAttribute('aria-invalid', 'true');
-    target.focus();
+    focusControl(target);
     message(
       error instanceof Error
         ? error.message
@@ -355,6 +360,7 @@ form.addEventListener('reset', () => {
   // Read defaults after the native reset action completes.
   window.setTimeout(() => {
     size.value = '1024';
+    size.dispatchEvent(new Event('vinasig-select-sync'));
     element('advanced-settings', HTMLDetailsElement).open = false;
     element('contact-more', HTMLDetailsElement).open = false;
     element('event-more', HTMLDetailsElement).open = false;

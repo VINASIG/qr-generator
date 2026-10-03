@@ -1,0 +1,116 @@
+.date-input-row,
+.time-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.date-input-row button {
+  padding-inline: 0.75rem;
+}
+
+.time-input-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+}
+
+.date-format {
+  margin-top: 0.5rem;
+}
+
+.date-dialog {
+  width: min(25rem, calc(100vw - 8px));
+  max-width: none;
+  max-height: calc(100dvh - 8px);
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.date-dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.date-title-row,
+.date-month-row,
+.date-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+}
+
+.date-title-row h2 {
+  font-size: var(--font-size-body);
+  margin: 0;
+}
+
+.date-month-row p {
+  margin: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.date-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--font-size-body);
+}
+
+.date-grid th,
+.date-grid td {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+
+.date-grid th {
+  height: 2.5rem;
+  font-size: 0.75rem;
+}
+
+.date-grid abbr {
+  text-decoration: none;
+}
+
+.date-day {
+  width: calc(100% - 4px);
+  min-height: 44px;
+  padding: 0.3em 0;
+  margin-inline: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-small);
+  font-weight: 500;
+}
+
+.date-day[data-outside='true'] {
+  color: var(--color-text-muted);
+}
+
+.date-day[aria-current='date'] {
+  border-color: var(--color-info-accent);
+}
+
+.date-day:focus-visible {
+  outline-offset: -3px;
+}
+
+.date-grid td[aria-selected='true'] .date-day {
+  background: var(--color-info-accent);
+  color: #fff;
+}
+
+.date-footer {
+  flex-wrap: wrap;
+}

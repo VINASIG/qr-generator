@@ -13,6 +13,10 @@ WEB-002 SHOULD use the current Bright Playful Minimalism proposal when the consu
 
 WEB-003 MUST keep essential content accessible, use semantic HTML and native controls when suitable, correct roles/names/states, form labels, visible focus, descriptive links and a working favicon across deployment base paths. Content and control usefulness decide visible UI elements; implementation badges and machine indexes are not mandatory product chrome. Inspect light/dark if supported.
 
+WEB-008 MUST style the complete control using the consuming project's tokens and Space Grotesk. This includes the open dropdown/listbox, calendar, color chooser, slider track/thumb and relevant disabled, invalid, focus and selected states. Styling only the closed native select or adding `accent-color` to an operating-system popup does not meet this requirement. Do not depend on operating-system select, date/time or color popups for the intended VINASIG interface. Prefer an existing reviewed design-system control. A native input may retain semantics under a custom presentation. A range input may retain native keyboard behavior when its track and thumb are styled across supported engines.
+
+Custom controls must retain labels, keyboard behavior, focus restoration, touch usability, form values, reset/disabled behavior and readable selected states. Keep direct text entry where dates, times, colors or numbers benefit from it. Fit open panels within the viewport without clipping the page. Test both closed and open controls in supported engines, light/dark themes, narrow viewports and enlarged text. Do not add a UI library or remove useful input behavior merely to satisfy styling. Browser dialogs for file selection, printing and downloads remain platform interactions.
+
 ## Responsive evidence
 
 WEB-004 MUST test representative routes/templates and shared components at 360x800, 390x844, 768x1024, 1024x768 and 1440x900. Add 320 CSS px reflow, both sides of actual content breakpoints, intermediate widths, long/localized text, enlarged text and relevant landscape. Derive breakpoints from the project, not a fixed VINASIG device list.

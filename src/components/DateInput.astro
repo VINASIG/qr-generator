@@ -1,0 +1,99 @@
+---
+import { CalendarDays, ChevronLeft, ChevronRight, X } from '@lucide/astro';
+interface Props {
+  id: string;
+  label: string;
+  describedby: string;
+  required: boolean;
+}
+const { id, label, describedby, required } = Astro.props;
+const weekdays = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+---
+
+<div class="date-input-row">
+  <input
+    id={id}
+    type="text"
+    placeholder="Year-month-day"
+    required={required}
+    autocomplete="off"
+    spellcheck="false"
+    aria-describedby={describedby + ' ' + id + '-error'}
+    maxlength="10"
+    data-date-picker
+  />
+  <button
+    id={id + '-open'}
+    type="button"
+    class="secondary date-open"
+    aria-label={'Choose ' + label.toLowerCase()}
+    aria-haspopup="dialog"
+    disabled
+  >
+    <CalendarDays size={20} aria-hidden="true" />
+  </button>
+</div>
+<p class="supporting date-format">
+  Enter year-month-day, for example 2026-10-03, or choose a day.
+</p>
+<p id={id + '-error'} class="supporting" hidden></p>
+<dialog id={id + '-dialog'} class="date-dialog" aria-labelledby={id + '-title'}>
+  <div class="date-title-row">
+    <h2 id={id + '-title'}>{'Choose ' + label.toLowerCase()}</h2>
+    <button
+      id={id + '-close'}
+      type="button"
+      class="secondary"
+      aria-label="Close calendar"
+    >
+      <X size={20} aria-hidden="true" />
+    </button>
+  </div>
+  <div class="date-month-row">
+    <button
+      id={id + '-previous'}
+      type="button"
+      class="secondary"
+      aria-label="Previous month"
+    >
+      <ChevronLeft size={20} aria-hidden="true" />
+    </button>
+    <p id={id + '-month'} aria-live="polite"></p>
+    <button
+      id={id + '-next'}
+      type="button"
+      class="secondary"
+      aria-label="Next month"
+    >
+      <ChevronRight size={20} aria-hidden="true" />
+    </button>
+  </div>
+  <table class="date-grid" role="grid" aria-labelledby={id + '-month'}>
+    <thead>
+      <tr>
+        {weekdays.map((day) => (
+          <th scope="col">
+            <abbr title={day}>{day.slice(0, 3)}</abbr>
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody id={id + '-days'}></tbody>
+  </table>
+  <div class="date-footer">
+    <button id={id + '-today'} type="button" class="secondary">
+      Today
+    </button>
+    <button id={id + '-clear'} type="button" class="secondary">
+      Clear date
+    </button>
+  </div>
+</dialog>

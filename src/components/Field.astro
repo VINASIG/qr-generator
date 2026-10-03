@@ -1,4 +1,6 @@
 ---
+import DateInput from './DateInput.astro';
+import SelectControl from './SelectControl.astro';
 interface Props {
   id: string;
   label: string;
@@ -37,6 +39,52 @@ const describedby =
       autocomplete="off"
       aria-describedby={describedby}
     ></textarea>
+  ) : type === 'date' ? (
+    <DateInput
+      id={id}
+      label={label}
+      describedby={describedby}
+      required={required}
+    />
+  ) : type === 'time' ? (
+    <>
+      <div class="time-input-row">
+        <input
+          id={id}
+          type="text"
+          placeholder="Hours:minutes"
+          required={required}
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby={describedby}
+          maxlength="5"
+          data-time-input
+        />
+        <div>
+          <label class="visually-hidden" for={id + '-preset-control'}>
+            {label + ' choices'}
+          </label>
+          <SelectControl
+            id={id + '-preset'}
+            label={label + ' choices'}
+            valueLabel="Choose time"
+            timeFor={id}
+          >
+            <option value="">Choose time</option>
+            {Array.from({ length: 96 }, (_, index) => {
+              const time =
+                String(Math.floor(index / 4)).padStart(2, '0') +
+                ':' +
+                String((index % 4) * 15).padStart(2, '0');
+              return <option value={time}>{time}</option>;
+            })}
+          </SelectControl>
+        </div>
+      </div>
+      <p class="supporting">
+        Enter hours and minutes, for example 09:30. You can enter any minute.
+      </p>
+    </>
   ) : (
     <input
       id={id}

@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
-import type { Page, TestInfo } from '@playwright/test';
+import type { Page, TestInfo, Locator } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
 import { PNG } from 'pngjs';
 import jsQR from 'jsqr';
 import { startServer } from '../../scripts/serve.ts';
 import { wifiPayload } from '../../src/lib/qr.ts';
+import { inspectInterface } from '../../.vinasig/standards/templates/web/interface.mjs';
 
 test.use({ timezoneId: 'Asia/Ho_Chi_Minh' });
 
@@ -89,6 +90,9 @@ async function capture(
   expect(geometry.body, JSON.stringify(geometry)).toBeLessThanOrEqual(
     geometry.width + 1,
   );
+  if (scriptEnabled) {
+    expect(await page.evaluate(inspectInterface)).toEqual([]);
+  }
   await mkdir(captureRoot, { recursive: true });
   const name =
     captureRoot +
@@ -217,9 +221,10 @@ for (const viewport of viewports)
         await page.getByText('Advanced settings', { exact: true }).click();
         await page.getByText('Technical details', { exact: true }).click();
         await capture(page, info, 'advanced-open');
-        await page
-          .getByLabel('Content type', { exact: true })
-          .selectOption('wifi');
+        await chooseSelect(
+          page.getByLabel('Content type', { exact: true }),
+          'wifi',
+        );
         await page
           .getByRole('textbox', { name: 'Network name' })
           .fill('Cafe; Guest');
@@ -358,7 +363,7 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
 }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(app.url);
-  await page.getByLabel('Content type', { exact: true }).selectOption('wifi');
+  await chooseSelect(page.getByLabel('Content type', { exact: true }), 'wifi');
   await page.getByRole('button', { name: 'Create QR code' }).click();
   await expect(page.getByRole('status')).toContainText('network name');
   await page.getByRole('textbox', { name: 'Network name' }).fill('Cafe; West');
@@ -389,7 +394,7 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(axe.violations).toEqual([]);
-  await page.getByLabel('Security', { exact: true }).selectOption('nopass');
+  await chooseSelect(page.getByLabel('Security', { exact: true }), 'nopass');
   await expect(page.getByLabel('Password', { exact: true })).toBeHidden();
   await page
     .getByRole('button', { name: 'Download PNG', exact: true })
@@ -413,7 +418,7 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
   await page
     .getByRole('textbox', { name: 'Link or text' })
     .fill('Previous text');
-  await page.getByLabel('Content type', { exact: true }).selectOption('wifi');
+  await chooseSelect(page.getByLabel('Content type', { exact: true }), 'wifi');
   await page
     .getByLabel('Network name', { exact: true })
     .fill('Fixture network');
@@ -429,9 +434,7 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
   await page.getByRole('button', { name: 'Clear', exact: true }).click();
   await capture(page, info, 'cleared-from-wifi');
   const text = page.getByRole('textbox', { name: 'Link or text' });
-  await expect(page.getByLabel('Content type', { exact: true })).toHaveValue(
-    'text',
-  );
+  await expect(page.locator('#content-type')).toHaveValue('text');
   await expect(text).toBeVisible();
   await expect(text).toBeEnabled();
   await expect(text).toHaveValue('');
@@ -455,9 +458,10 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
 test('all PNG sizes and content capacity', async ({ page }) => {
   await page.goto(app.url);
   for (const pixels of [512, 1024, 2048]) {
-    await page
-      .getByLabel('PNG size', { exact: true })
-      .selectOption(String(pixels));
+    await chooseSelect(
+      page.getByLabel('PNG size', { exact: true }),
+      String(pixels),
+    );
     await generate(page, 'https://example.com');
     const decoded = decodePng(await download(page, 'PNG'));
     expect(decoded.width).toBe(pixels);
@@ -502,10 +506,10 @@ test('keyboard, native selection and touch work without hover', async ({
     await type.tap();
     await page.keyboard.press('Escape');
     await type.focus();
-    // Native typeahead works across platforms after dismissing a touch popup.
+    // Custom typeahead preserves the original form values after dismissing its popup.
     await page.keyboard.press('w');
     await page.keyboard.press('Tab');
-    await expect(type).toHaveValue('wifi');
+    await expect(page.locator('#content-type')).toHaveValue('wifi');
     await expect(page.locator('#ssid')).toBeFocused();
     await expect(page.locator('#wifi-fields')).toBeVisible();
     await expect(page.locator('#wifi-fields')).toBeEnabled();
@@ -513,10 +517,10 @@ test('keyboard, native selection and touch work without hover', async ({
     await select.focus();
     await page.keyboard.press('o');
     await page.keyboard.press('Tab');
-    await expect(select).toHaveValue('nopass');
+    await expect(page.locator('#security')).toHaveValue('nopass');
     await expect(page.locator('#password-fields')).toBeHidden();
     await expect(page.locator('#password')).toBeDisabled();
-    await capture(page, info, 'native-select-keyboard');
+    await capture(page, info, 'custom-select-keyboard');
     const box = await page
       .getByRole('button', { name: 'Create QR code' })
       .boundingBox();
@@ -551,6 +555,9 @@ test('unavailable client script cannot submit QR content to the host', async ({
         exact: true,
       });
       await expect(create).toBeDisabled();
+      for (const control of await page.getByRole('combobox').all())
+        await expect(control).toBeDisabled();
+      expect(await page.evaluate(inspectInterface)).toEqual([]);
       for (const control of await page.locator('input, textarea, select').all())
         await expect(control).not.toHaveAttribute('name', /./u);
       await create.click({ force: true });
@@ -895,9 +902,10 @@ for (const viewport of standardViewports)
             'open',
             '',
           );
-          await page
-            .getByLabel('Content type', { exact: true })
-            .selectOption(fixture.kind);
+          await chooseSelect(
+            page.getByLabel('Content type', { exact: true }),
+            fixture.kind,
+          );
           await expect(
             page.locator('fieldset[data-content-type]:not([hidden])'),
           ).toHaveCount(1);
@@ -960,9 +968,7 @@ for (const viewport of standardViewports)
           await page
             .getByRole('button', { name: 'Clear', exact: true })
             .click();
-          await expect(
-            page.getByLabel('Content type', { exact: true }),
-          ).toHaveValue('text');
+          await expect(page.locator('#content-type')).toHaveValue('text');
           await expect(
             page.getByRole('textbox', { name: 'Link or text' }),
           ).toBeFocused();
@@ -999,19 +1005,30 @@ for (const fixture of contentFixtures)
       await page.setViewportSize({ width: 320, height: 800 });
       await page.goto(app.url);
       await page.addStyleTag({ content: 'html {font-size:200%}' });
-      await page
-        .getByLabel('Content type', { exact: true })
-        .selectOption(fixture.kind);
+      await chooseSelect(
+        page.getByLabel('Content type', { exact: true }),
+        fixture.kind,
+      );
       if (fixture.more)
         await page.getByText(fixture.more, { exact: true }).click();
       await page.getByText('Advanced settings', { exact: true }).click();
       for (const [id, value] of Object.entries(fixture.values))
         await page.locator('#' + id).fill(value);
       if (fixture.kind === 'event') {
-        for (const id of ['event-start', 'event-end'])
-          await expect(page.locator('#' + id)).toHaveAttribute('type', 'date');
-        for (const id of ['event-start-time', 'event-end-time'])
-          await expect(page.locator('#' + id)).toHaveAttribute('type', 'time');
+        for (const id of ['event-start', 'event-end']) {
+          await expect(page.locator('#' + id)).toHaveAttribute('type', 'text');
+          await expect(page.locator('#' + id)).toHaveAttribute(
+            'data-date-picker',
+            '',
+          );
+        }
+        for (const id of ['event-start-time', 'event-end-time']) {
+          await expect(page.locator('#' + id)).toHaveAttribute('type', 'text');
+          await expect(page.locator('#' + id)).toHaveAttribute(
+            'data-time-input',
+            '',
+          );
+        }
         expect(
           await page
             .locator('#event-start')
@@ -1037,14 +1054,16 @@ test('advanced options validate capacity, invalidate every setting and reset to 
   await page.goto(app.url);
   await page.getByText('Advanced settings', { exact: true }).click();
   for (const [index, level] of ['L', 'M', 'Q', 'H'].entries()) {
-    await page
-      .getByLabel('Error correction', { exact: true })
-      .selectOption(level);
-    await page.getByLabel('White border', { exact: true }).selectOption('8');
-    await page.getByLabel('QR version', { exact: true }).selectOption('5');
-    await page
-      .getByLabel('Mask pattern', { exact: true })
-      .selectOption(String(index));
+    await chooseSelect(
+      page.getByLabel('Error correction', { exact: true }),
+      level,
+    );
+    await chooseSelect(page.getByLabel('White border', { exact: true }), '8');
+    await chooseSelect(page.getByLabel('QR version', { exact: true }), '5');
+    await chooseSelect(
+      page.getByLabel('Mask pattern', { exact: true }),
+      String(index),
+    );
     await generate(page, 'Settings fixture');
     expect(decodePng(await download(page, 'PNG')).text).toBe(
       'Settings fixture',
@@ -1054,7 +1073,7 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     expect(await decodeSvg(page, svg)).toBe('Settings fixture');
     await expect(page.locator('#code-correction')).toHaveText(level);
     await expect(page.locator('#code-version')).toHaveText(
-      'Version 5 / 37 x 37',
+      'Version 5 - 37 x 37',
     );
     await expect(page.locator('#code-mask')).toHaveText(
       'Pattern ' + String(index),
@@ -1068,7 +1087,7 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     ['Mask pattern', '7'],
   ]) {
     assert(label && value);
-    await page.getByLabel(label, { exact: true }).selectOption(value);
+    await chooseSelect(page.getByLabel(label, { exact: true }), value);
     await expect(
       page.getByRole('button', { name: 'Download PNG', exact: true }),
     ).toBeDisabled();
@@ -1076,7 +1095,7 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     await generate(page, 'Settings fixture');
   }
   expect(decodePng(await download(page, 'PNG')).text).toBe('Settings fixture');
-  await page.getByLabel('QR version', { exact: true }).selectOption('1');
+  await chooseSelect(page.getByLabel('QR version', { exact: true }), '1');
   await generate(page, 'x');
   await page
     .getByRole('textbox', { name: 'Link or text' })
@@ -1087,8 +1106,8 @@ test('advanced options validate capacity, invalidate every setting and reset to 
   await expect(page.getByRole('status')).toContainText('needs version');
   await expect(page.getByLabel('QR version', { exact: true })).toBeFocused();
   await capture(page, info, 'version-too-small');
-  await page.getByLabel('QR version', { exact: true }).selectOption('auto');
-  await page.getByLabel('Error correction', { exact: true }).selectOption('H');
+  await chooseSelect(page.getByLabel('QR version', { exact: true }), 'auto');
+  await chooseSelect(page.getByLabel('Error correction', { exact: true }), 'H');
   await page
     .getByRole('textbox', { name: 'Link or text' })
     .fill('a'.repeat(1274));
@@ -1106,7 +1125,7 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     page.getByRole('button', { name: 'Download SVG', exact: true }),
   ).toBeDisabled();
   await capture(page, info, 'correction-capacity-error');
-  await page.getByLabel('Error correction', { exact: true }).selectOption('M');
+  await chooseSelect(page.getByLabel('Error correction', { exact: true }), 'M');
   await generate(page, 'Recovered settings');
   expect(decodePng(await download(page, 'PNG')).text).toBe(
     'Recovered settings',
@@ -1128,12 +1147,12 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
 }, info) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto(app.url);
-  await page.getByLabel('Content type', { exact: true }).selectOption('event');
+  await chooseSelect(page.getByLabel('Content type', { exact: true }), 'event');
   // Engines can return the IANA alias Asia/Saigon for Asia/Ho_Chi_Minh.
   const zone = await page.evaluate(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
-  await expect(page.locator('#event-timezone')).toContainText('(' + zone + ')');
+  await expect(page.locator('#event-timezone')).toContainText(zone);
   expect(
     await page.evaluate(() => new Date('2026-10-03T09:00').getTimezoneOffset()),
   ).toBe(-420);
@@ -1148,7 +1167,11 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await page.getByLabel('Start time', { exact: true }).fill('09:00');
   await page.getByLabel('End time', { exact: true }).fill('10:00');
   await page.getByLabel('All-day event', { exact: true }).check();
-  await expect(page.locator('#event-start')).toHaveAttribute('type', 'date');
+  await expect(page.locator('#event-start')).toHaveAttribute('type', 'text');
+  await expect(page.locator('#event-start')).toHaveAttribute(
+    'data-date-picker',
+    '',
+  );
   await expect(page.getByLabel('Start date', { exact: true })).toHaveValue(
     '2026-12-31',
   );
@@ -1207,33 +1230,34 @@ test('optional details open at the invalid field and a changed type cannot reviv
   page,
 }) => {
   await page.goto(app.url);
-  await page
-    .getByLabel('Content type', { exact: true })
-    .selectOption('contact');
+  await chooseSelect(
+    page.getByLabel('Content type', { exact: true }),
+    'contact',
+  );
   await page.getByLabel('Full name', { exact: true }).fill('Fixture contact');
   await page.getByText('More contact details', { exact: true }).click();
   await page
-    .getByLabel('Website (optional)', { exact: true })
+    .getByLabel('Website if needed', { exact: true })
     .fill('javascript:alert(1)');
   await page.getByText('More contact details', { exact: true }).click();
   await page
     .getByRole('button', { name: 'Create QR code', exact: true })
     .click();
   await expect(
-    page.getByLabel('Website (optional)', { exact: true }),
+    page.getByLabel('Website if needed', { exact: true }),
   ).toBeFocused();
   await expect(page.locator('#contact-more')).toHaveAttribute('open', '');
   await expect(
-    page.getByLabel('Website (optional)', { exact: true }),
+    page.getByLabel('Website if needed', { exact: true }),
   ).toHaveValue('javascript:alert(1)');
   await page
-    .getByLabel('Website (optional)', { exact: true })
+    .getByLabel('Website if needed', { exact: true })
     .fill('https://example.com');
   await page
     .getByRole('button', { name: 'Create QR code', exact: true })
     .click();
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
-  await page.getByLabel('Content type', { exact: true }).selectOption('sms');
+  await chooseSelect(page.getByLabel('Content type', { exact: true }), 'sms');
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
   ).toBeDisabled();
@@ -1249,10 +1273,10 @@ test('download URL cleanup preserves the selected settings and current preview',
   await page.goto(app.url);
   await page.clock.install();
   await page.getByText('Advanced settings', { exact: true }).click();
-  await page.getByLabel('QR version', { exact: true }).selectOption('5');
-  await page.getByLabel('Mask pattern', { exact: true }).selectOption('7');
-  await page.getByLabel('White border', { exact: true }).selectOption('12');
-  await page.getByLabel('PNG size', { exact: true }).selectOption('512');
+  await chooseSelect(page.getByLabel('QR version', { exact: true }), '5');
+  await chooseSelect(page.getByLabel('Mask pattern', { exact: true }), '7');
+  await chooseSelect(page.getByLabel('White border', { exact: true }), '12');
+  await chooseSelect(page.getByLabel('PNG size', { exact: true }), '512');
   await generate(page, 'Download cleanup fixture');
   expect(decodePng(await download(page, 'PNG')).text).toBe(
     'Download cleanup fixture',
@@ -1285,7 +1309,7 @@ test('oversized structured content focuses its visible or collapsed field withou
     assert(kind && first && large && more !== undefined);
     const fixture = contentFixtures.find((value) => value.kind === kind);
     assert(fixture);
-    await page.getByLabel('Content type', { exact: true }).selectOption(kind);
+    await chooseSelect(page.getByLabel('Content type', { exact: true }), kind);
     if (more) await page.getByText(more, { exact: true }).click();
     for (const [id, value] of Object.entries(fixture.values))
       await page.locator('#' + id).fill(value);
@@ -1310,8 +1334,122 @@ test('oversized structured content focuses its visible or collapsed field withou
       page.getByRole('button', { name: 'Download PNG', exact: true }),
     ).toBeDisabled();
     await page.getByRole('button', { name: 'Clear', exact: true }).click();
-    await expect(page.getByLabel('Content type', { exact: true })).toHaveValue(
-      'text',
-    );
+    await expect(page.locator('#content-type')).toHaveValue('text');
   }
 });
+
+async function chooseSelect(locator: Locator, value: string): Promise<void> {
+  const page = locator.page();
+  const id = await locator.getAttribute('id');
+  assert(id);
+  const nativeId = id.replace(/-control$/, '');
+  const native = page.locator('#' + nativeId);
+  const label = await native.evaluate((element, expected) => {
+    if (!(element instanceof HTMLSelectElement))
+      throw new Error('Missing native form state');
+    return [...element.options]
+      .find((option) => option.value === expected)
+      ?.text.trim();
+  }, value);
+  assert(label);
+  await locator.click();
+  await page
+    .locator('#' + nativeId + '-options')
+    .getByRole('option', { name: label, exact: true })
+    .click();
+  await expect(native).toHaveValue(value);
+}
+
+for (const theme of ['light', 'dark'] as const) {
+  for (const viewport of [
+    { width: 320, height: 800 },
+    { width: 360, height: 800 },
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1024, height: 768 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`custom controls ${theme} ${String(viewport.width)} keyboard, calendar and time`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+      await page.goto(app.url);
+      const kind = page.getByRole('combobox', {
+        name: 'Content type',
+        exact: true,
+      });
+      await kind.click();
+      await expect(kind).toBeFocused();
+      await page.keyboard.press('Escape');
+      await kind.press('ArrowDown');
+      await kind.press('End');
+      await kind.press('Escape');
+      await expect(page.locator('#content-type')).toHaveValue('text');
+      await expect(kind).toBeFocused();
+      await kind.press('Home');
+      await page.keyboard.type('Phone call');
+      await kind.press('Enter');
+      await expect(page.locator('#content-type')).toHaveValue('phone');
+      await expect(page.locator('#phone-fields')).toBeVisible();
+      await kind.press('ArrowDown');
+      await kind.press('Home');
+      await kind.press('Tab');
+      await expect(page.locator('#content-type')).toHaveValue('text');
+      await expect(page.locator('#content')).toBeFocused();
+      await chooseSelect(kind, 'event');
+      const start = page.getByLabel('Start date', { exact: true });
+      await start.fill('2026-12-31');
+      await page.locator('#event-start-open').click();
+      const dialog = page.locator('#event-start-dialog');
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator('[data-date="2026-12-31"]')).toBeFocused();
+      await page.keyboard.press('ArrowRight');
+      await expect(dialog.locator('[data-date="2027-01-01"]')).toBeFocused();
+      await page.keyboard.press('PageUp');
+      await expect(dialog.locator('[data-date="2026-12-01"]')).toBeFocused();
+      await page.keyboard.press('PageDown');
+      const image = info.outputPath('calendar-open.png');
+      await page.screenshot({ path: image, animations: 'disabled' });
+      await info.attach('calendar-open', {
+        path: image,
+        contentType: 'image/png',
+      });
+      const bounds = await dialog.boundingBox();
+      expect(bounds).not.toBeNull();
+      if (!bounds) throw new Error('Calendar bounds missing');
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width + 1);
+      expect(bounds.y).toBeGreaterThanOrEqual(0);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewport.height + 1);
+      await page.keyboard.press('Enter');
+      await expect(start).toHaveValue('2027-01-01');
+      await expect(dialog).toBeHidden();
+      await expect(page.locator('#event-start-open')).toBeFocused();
+      await chooseSelect(
+        page.getByLabel('Start time choices', { exact: true }),
+        '09:30',
+      );
+      await expect(page.locator('#event-start-time')).toHaveValue('09:30');
+      await page.locator('#event-start-time').fill('09:07');
+      await expect(page.locator('#event-start-time-preset')).toHaveValue('');
+      await expect(page.locator('#event-start-time-preset-control')).toHaveText(
+        'Choose time',
+      );
+      await page.locator('#event-start-open').click();
+      await page.locator('#event-start-clear').click();
+      await expect(start).toHaveValue('');
+      await expect(dialog).toBeHidden();
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      expect(axe.violations).toEqual([]);
+      await page.getByRole('button', { name: 'Clear', exact: true }).click();
+      await expect(page.locator('#content-type')).toHaveValue('text');
+      await expect(page.locator('#content-type-control')).toHaveText(
+        'URL or text',
+      );
+      await expect(page.locator('#content')).toBeFocused();
+    });
+  }
+}

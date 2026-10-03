@@ -9,6 +9,8 @@ Discover routes/templates and CSS breakpoints. Start/reuse the correct local app
 
 Measure the five required viewports, 320 px reflow, actual breakpoint neighbors and intermediate widths. Scroll fully. Capture AND open before screenshots, inspect styles/bounds and test applicable open/closed controls, keyboard, errors/loading, long text, enlarged text and themes.
 
+Apply WEB-008 to the full dropdown, calendar, color chooser and slider. A styled closed field with an operating-system popup fails the control requirement. Apply LANG-004 and LANG-005 to initial and dynamic copy in every locale. Run the interface inspector on real states, then inspect the writing and screenshots. Preserve required syntax and user data with narrowly scoped semantic annotations.
+
 Fix the source cause and shared components. Do not clip page overflow, transform-scale the page, hide content, or weaken an assertion. Repeat the same affected matrix after each group of fixes. Add role/name based regression checks using the local web templates where they fit. Run axe plus manual focus, keyboard, contrast/reflow checks. Axe alone is partial coverage.
 
 Output route/viewport/engine/state results, before/after evidence and tests, unrun device/assistive checks and concrete blockers. Chromium emulation never establishes real iPhone/Safari behavior. Review screenshot baselines before approving them.

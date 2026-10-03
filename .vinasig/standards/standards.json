@@ -281,6 +281,33 @@
       "verification": ["automatic", "agent"],
       "evidence": "Roles, state, task outcome, attempts and blockers",
       "exceptions": "No security bypass; independent session absent means NOT_RUN."
+    },
+    {
+      "id": "LANG-004",
+      "scope": "core",
+      "level": "MUST",
+      "summary": "Visible interface punctuation, case and list markers",
+      "verification": ["automatic", "agent", "human"],
+      "evidence": "Rendered copy inspector and reviewed localized states",
+      "exceptions": "Required syntax, official names, immutable artwork and user data retain their correct form. Exceptions must be narrow and explained."
+    },
+    {
+      "id": "LANG-005",
+      "scope": "core",
+      "level": "MUST",
+      "summary": "Natural interface language without unnecessary jargon or parenthetical labels",
+      "verification": ["agent", "human"],
+      "evidence": "Reviewed labels, helpers, errors, results and every locale",
+      "exceptions": "Necessary domain terms and legal identifiers remain accurate."
+    },
+    {
+      "id": "WEB-008",
+      "scope": "web",
+      "level": "MUST",
+      "summary": "Styled open and closed form controls across supported engines",
+      "verification": ["automatic", "agent", "human"],
+      "evidence": "Opened dropdown, calendar, color and slider screenshots plus keyboard and form regressions",
+      "exceptions": "File, print and download browser dialogs remain platform interactions. No blanket exemption for native form popups."
     }
   ]
 }

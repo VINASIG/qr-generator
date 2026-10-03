@@ -1,0 +1,37 @@
+---
+import { ChevronDown } from '@lucide/astro';
+interface Props {
+  id: string;
+  label: string;
+  valueLabel: string;
+  describedby?: string;
+  timeFor?: string;
+}
+const { id, label, valueLabel, describedby, timeFor } = Astro.props;
+---
+
+<select
+  id={id}
+  hidden
+  data-custom-select
+  data-time-for={timeFor}
+  aria-describedby={describedby}
+>
+  <slot />
+</select>
+<button
+  id={id + '-control'}
+  class="select-control"
+  type="button"
+  role="combobox"
+  aria-label={label}
+  aria-haspopup="listbox"
+  aria-expanded="false"
+  aria-controls={id + '-options'}
+  aria-describedby={describedby}
+  disabled
+>
+  <span>{valueLabel}</span>
+  <ChevronDown size={20} aria-hidden="true" />
+</button>
+<div id={id + '-options'} class="select-options" hidden></div>

@@ -1,8 +1,11 @@
 ---
+import SelectControl from '../components/SelectControl.astro';
 import { Download, QrCode } from '@lucide/astro';
 import ContentFields from '../components/ContentFields.astro';
 import '../styles/tokens.css';
 import '../styles/app.css';
+import '../styles/select-control.css';
+import '../styles/date-control.css';
 const configuredBase = import.meta.env.BASE_URL;
 const base = configuredBase.endsWith('/')
   ? configuredBase
@@ -102,8 +105,12 @@ const asset = (name: string) => base + name;
             <h2 id="content-heading">Create your code</h2>
             <form id="qr-form" novalidate>
               <div class="field content-type">
-                <label for="content-type">Content type</label>
-                <select id="content-type">
+                <label for="content-type-control">Content type</label>
+                <SelectControl
+                  id="content-type"
+                  label="Content type"
+                  valueLabel="URL or text"
+                >
                   <option value="text" selected>
                     URL or text
                   </option>
@@ -115,7 +122,7 @@ const asset = (name: string) => base + name;
                   <option value="location">Location</option>
                   <option value="event">Calendar</option>
                   <option value="file">File link</option>
-                </select>
+                </SelectControl>
               </div>
               <fieldset
                 id="text-fields"
@@ -127,7 +134,7 @@ const asset = (name: string) => base + name;
                 <textarea
                   id="content"
                   rows="4"
-                  placeholder="e.g. https://example.com"
+                  placeholder="For example https://example.com"
                   required
                   spellcheck="false"
                   autocomplete="off"
@@ -155,12 +162,16 @@ const asset = (name: string) => base + name;
                   spellcheck="false"
                   aria-describedby="form-status"
                 />
-                <label for="security">Security</label>
-                <select id="security">
-                  <option value="WPA">WPA / WPA2</option>
+                <label for="security-control">Security</label>
+                <SelectControl
+                  id="security"
+                  label="Security"
+                  valueLabel="WPA or WPA2"
+                >
+                  <option value="WPA">WPA or WPA2</option>
                   <option value="WEP">WEP</option>
                   <option value="nopass">Open network</option>
-                </select>
+                </SelectControl>
                 <div id="password-fields" class="fields">
                   <label for="password">Password</label>
                   <input
@@ -178,9 +189,9 @@ const asset = (name: string) => base + name;
                   <input id="hidden-network" type="checkbox" /> Hidden network
                 </label>
                 <p id="wifi-help" class="supporting">
-                  WPA / WPA2 is for personal networks. Anyone with this code can
-                  read its Wi-Fi details. Keep the downloaded image private when
-                  needed.
+                  WPA or WPA2 is for personal networks. Anyone with this code
+                  can read its Wi-Fi details. Keep the downloaded image private
+                  when needed.
                 </p>
               </fieldset>
               <ContentFields />
@@ -188,28 +199,37 @@ const asset = (name: string) => base + name;
                 <summary>Advanced settings</summary>
                 <div class="advanced-controls">
                   <div class="field">
-                    <label for="error-correction">Error correction</label>
-                    <select
+                    <label for="error-correction-control">
+                      Error correction
+                    </label>
+                    <SelectControl
                       id="error-correction"
-                      aria-describedby="correction-help form-status"
+                      label="Error correction"
+                      valueLabel="Medium - M - 15%"
+                      describedby="correction-help form-status"
                     >
-                      <option value="L">L (7%)</option>
+                      <option value="L">Low - L - 7%</option>
                       <option value="M" selected>
-                        M (15%)
+                        Medium - M - 15%
                       </option>
-                      <option value="Q">Q (25%)</option>
-                      <option value="H">H (30%)</option>
-                    </select>
+                      <option value="Q">Quartile - Q - 25%</option>
+                      <option value="H">High - H - 30%</option>
+                    </SelectControl>
                   </div>
                   <div class="field">
-                    <label for="quiet-zone">White border</label>
-                    <select id="quiet-zone" aria-describedby="form-status">
+                    <label for="quiet-zone-control">White border</label>
+                    <SelectControl
+                      id="quiet-zone"
+                      label="White border"
+                      valueLabel="4 modules"
+                      describedby="form-status"
+                    >
                       <option value="4" selected>
                         4 modules
                       </option>
                       <option value="8">8 modules</option>
                       <option value="12">12 modules</option>
-                    </select>
+                    </SelectControl>
                   </div>
                 </div>
                 <p id="correction-help" class="supporting">
@@ -221,10 +241,12 @@ const asset = (name: string) => base + name;
                 </p>
                 <div class="advanced-controls">
                   <div class="field">
-                    <label for="qr-version">QR version</label>
-                    <select
+                    <label for="qr-version-control">QR version</label>
+                    <SelectControl
                       id="qr-version"
-                      aria-describedby="structure-help form-status"
+                      label="QR version"
+                      valueLabel="Auto"
+                      describedby="structure-help form-status"
                     >
                       <option value="auto" selected>
                         Auto
@@ -232,13 +254,15 @@ const asset = (name: string) => base + name;
                       {Array.from({ length: 40 }, (_, i) => (
                         <option value={i + 1}>{i + 1}</option>
                       ))}
-                    </select>
+                    </SelectControl>
                   </div>
                   <div class="field">
-                    <label for="mask-pattern">Mask pattern</label>
-                    <select
+                    <label for="mask-pattern-control">Mask pattern</label>
+                    <SelectControl
                       id="mask-pattern"
-                      aria-describedby="structure-help form-status"
+                      label="Mask pattern"
+                      valueLabel="Auto"
+                      describedby="structure-help form-status"
                     >
                       <option value="auto" selected>
                         Auto
@@ -246,13 +270,13 @@ const asset = (name: string) => base + name;
                       {Array.from({ length: 8 }, (_, i) => (
                         <option value={i}>{i}</option>
                       ))}
-                    </select>
+                    </SelectControl>
                   </div>
                 </div>
                 <p id="structure-help" class="supporting">
                   Leave version and mask on Auto unless a specification requires
                   them. Auto selects the smallest version that fits. Versions
-                  1-40 control the module grid; masks 0-7 change its pattern,
+                  1-40 control the module grid. Masks 0-7 change its pattern,
                   not its content. Content is limited to 2,000 UTF-8 bytes, and
                   must also fit the selected version and correction level.
                 </p>
@@ -303,14 +327,18 @@ const asset = (name: string) => base + name;
               />
             </div>
             <div class="export-size">
-              <label for="image-size">PNG size</label>
-              <select id="image-size">
+              <label for="image-size-control">PNG size</label>
+              <SelectControl
+                id="image-size"
+                label="PNG size"
+                valueLabel="1024 pixels"
+              >
                 <option value="512">512 pixels</option>
                 <option value="1024" selected>
                   1024 pixels
                 </option>
                 <option value="2048">2048 pixels</option>
-              </select>
+              </SelectControl>
             </div>
             <div class="download-actions">
               <button id="download-png" class="primary" type="button" disabled>
@@ -332,7 +360,7 @@ const asset = (name: string) => base + name;
             </p>
             <details id="encoded-details" hidden>
               <summary>Encoded content</summary>
-              <p id="encoded-content"></p>
+              <p data-user-content id="encoded-content"></p>
             </details>
             <details id="technical-details" hidden>
               <summary>Technical details</summary>
@@ -346,7 +374,7 @@ const asset = (name: string) => base + name;
                   <dd id="code-bytes"></dd>
                 </div>
                 <div>
-                  <dt>Version / grid</dt>
+                  <dt>Version and grid</dt>
                   <dd id="code-version"></dd>
                 </div>
                 <div>
@@ -377,7 +405,7 @@ const asset = (name: string) => base + name;
             <summary>Which content type should I choose?</summary>
             <p>
               URL or text keeps what you enter unchanged. Wi-Fi prepares network
-              details; email, phone and SMS prepare an action in a compatible
+              details. Email, phone and SMS prepare an action in a compatible
               app. Contact creates a vCard, Location uses coordinates, and
               Calendar event creates an iCalendar event. Reader support varies,
               so test the action on the devices you expect to use.
@@ -389,7 +417,7 @@ const asset = (name: string) => base + name;
               Choose File link for an image, PDF or other file's direct web
               address. The file needs to be hosted elsewhere and accessible to
               the people scanning it. A traditional QR code has limited data
-              capacity; this tool does not embed the file, upload it or add a
+              capacity. This tool does not embed the file, upload it or add a
               redirect service.
             </p>
           </details>
@@ -400,7 +428,7 @@ const asset = (name: string) => base + name;
               content at the same version. A version is the grid size, from 21 x
               21 modules at version 1 to 177 x 177 at version 40. The mask
               balances dark and light patterns. Auto chooses a fitting version
-              and a mask; the white border always keeps at least four modules.
+              and a mask. The white border always keeps at least four modules.
               See{' '}
               <a href="https://www.qrcode.com/en/about/error_correction.html">
                 DENSO WAVE's correction guide
