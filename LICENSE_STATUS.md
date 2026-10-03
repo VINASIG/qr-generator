@@ -1,5 +1,5 @@
-# Rights and distribution
+# Current license status
 
-The owner authorized public source and website publication for this new VINASIG project. No general source-code license was selected in the request. Package metadata therefore remains private for npm and UNLICENSED. Public visibility does not grant additional reuse rights.
+The owner selected AGPL-3.0-or-later for VINASIG-authored software and CC-BY-SA-4.0 for authored documentation on 4 October 2026. This replaces the earlier pending-license status.
 
-Third-party components retain their own licenses. Space Grotesk retains SIL OFL 1.1. VINASIG artwork comes from the supplied organization archive and receives no new license here. A source license can be selected by the owner separately.
+Read [LICENSE](LICENSE), [the material map](LICENSES.md), [VINASIG Brand Usage Policy](BRAND_POLICY.md) and [the dated review](docs/audits/licensing-2026-10-04.md). Fonts, dependency notices and official identity assets keep their separate terms. The npm package remains private to prevent accidental publication, while the source grant is open.

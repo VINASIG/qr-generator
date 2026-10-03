@@ -20,6 +20,8 @@ Read task and relevant local guidance, discover the stack and commands, identify
 
 ## Exceptions and specialization
 
+License selection, imported material and source/built distribution follow [the licensing policy](licensing.md). LIC-001 through LIC-004 apply across every profile. Current owner authorization for licensing persists, but never supplies a missing third-party right.
+
 Platform and user instructions take precedence. Within the adopted VINASIG policy, project and directory guidance may specialize a rule's implementation. An unresolved conflict with a mandatory rule must be reported, not silently resolved by changing this standard. Actual Codex instruction precedence is described in the adapter and is not an organization policy enforcement mechanism.
 
 An exception records rule ID, project, owner who approved it, reason, compensating check, expiration/review date and approval evidence using the exception template. Do not fabricate the approver. Review high-impact policy changes separately from the implementation that benefits from them. No exception authorizes a platform or sandbox violation.

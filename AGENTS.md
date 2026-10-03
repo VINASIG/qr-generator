@@ -9,7 +9,7 @@ This static Astro and TypeScript project creates traditional QR codes locally. R
 - Use the pinned Node and npm versions. Run npm run check, npm test and npm run build. UI changes require npm run test:browser and opened screenshots. Before publication run npm run test:performance, inspect the staged diff and verify remote HEAD, exact-commit CI and deployment.
 - Source quality gates must remain strict. Tests independently decode generated PNG and SVG, verify exact payloads, quiet zones, stale-output invalidation, privacy, errors, keyboard, touch and responsive states. Never weaken an assertion or budget to pass.
 - Store screenshots, traces, research captures and runtime tooling in ignored output/. Record durable decisions and measured limits under docs/audits/. A fresh Codex skill discovery, independent SI-agent trial, physical-phone scan and field metrics must be reported NOT_RUN unless actually performed.
-- Respect existing user work and current authorization. Public visibility grants no source license. Keep external notices. Commit and publish only within the current task authorization.
+- Respect existing user work and current authorization. Read LICENSES.md and BRAND_POLICY.md for the current grant and exclusions. Keep external notices. Commit and publish only within the current task authorization.
 <!-- VINASIG STANDARDS BEGIN -->
 ## VINASIG SI agent standards 0.1.0
 
@@ -18,6 +18,8 @@ Read `.vinasig/standards/policies/core.md` and `language.md` before repository w
 Active profile is `web-typescript`. Read `.vinasig/standards/profiles/web-typescript.md` and the task-relevant policies. Core is valid for CLI and documentation projects and installs no browser dependencies.
 
 Use `$vinasig-workflow` for implementation work and `$vinasig-dependencies` when adding or upgrading dependencies. Report PASS, FAIL, NOT_RUN or NOT_APPLICABLE with evidence and reasons. Commit, push and publish only within the task authorization.
+
+For license selection, imported material or distribution changes read `policies/licensing.md` and `LICENSES.md` inside the snapshot. LIC-001 through LIC-004 require purpose-based selection, authority and dependency review, separate documentation/font/data/brand rights, consistent SPDX metadata and delivery evidence. Importing this standard does not relicense the host project.
 
 For UI changes read `policies/web.md` inside the snapshot. Apply LANG-004/LANG-005 to all visible copy and locales. WEB-001 requires original transparent header logos matched to the actual surface, without a padded or rounded logo card. WEB-008 requires styled open dropdowns, calendars, color choosers and sliders, including safe initial HTML before scripts load. Use `$vinasig-responsive` for layout/accessibility, `$vinasig-motion` for movement, `$vinasig-search` for SEO/AEO/GEO, `$vinasig-performance` for speed, and `$vinasig-agent-readiness` for browser-agent tasks. Space Grotesk, Lucide and Simple Icons follow their separate roles. Open and inspect real screenshots.
 

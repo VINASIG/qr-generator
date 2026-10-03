@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-or-later",
   "description": "Create traditional static QR codes locally with VINASIG.",
   "repository": {
     "type": "git",
@@ -28,12 +28,13 @@
     "format": "prettier --write .",
     "check:standards": "node scripts/check-standards.ts",
     "check:built": "node scripts/check-built.ts",
-    "check": "npm run typecheck && npm run lint && npm run lint:css && npm run format:check && npm run check:standards",
-    "build": "astro build && npm run check:built",
+    "check": "npm run typecheck && npm run lint && npm run lint:css && npm run format:check && npm run check:standards && npm run check:licenses",
+    "build": "astro build && npm run check:built && npm run check:licenses -- --built",
     "test": "node --test tests/*.test.ts",
     "test:browser": "playwright test",
     "test:responsive": "playwright test --grep responsive",
-    "test:performance": "node scripts/performance.ts"
+    "test:performance": "node scripts/performance.ts",
+    "check:licenses": "node .vinasig/standards/templates/check-licenses.mjs"
   },
   "dependencies": {
     "@lucide/astro": "1.50.0",

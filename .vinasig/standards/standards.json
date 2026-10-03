@@ -308,6 +308,42 @@
       "verification": ["automatic", "agent", "human"],
       "evidence": "Opened dropdown, calendar, color and slider screenshots plus keyboard and form regressions",
       "exceptions": "File, print and download browser dialogs remain platform interactions. No blanket exemption for native form popups."
+    },
+    {
+      "id": "LIC-001",
+      "scope": "core",
+      "level": "MUST",
+      "summary": "Inventory ownership, existing grants, materials and dependencies",
+      "verification": ["automatic", "agent", "human"],
+      "evidence": "License review, ownership and dependency inventory, scope map, text/asset digests, metadata and publication checks",
+      "exceptions": "Current task authorization persists. Never invent third-party rights. Record purpose-based license exceptions and unresolved human review."
+    },
+    {
+      "id": "LIC-002",
+      "scope": "core",
+      "level": "MUST",
+      "summary": "Authorized purpose-based license selection",
+      "verification": ["automatic", "agent", "human"],
+      "evidence": "License review, ownership and dependency inventory, scope map, text/asset digests, metadata and publication checks",
+      "exceptions": "Current task authorization persists. Never invent third-party rights. Record purpose-based license exceptions and unresolved human review."
+    },
+    {
+      "id": "LIC-003",
+      "scope": "core",
+      "level": "MUST",
+      "summary": "Consistent scopes, SPDX, notices and distributed artifacts",
+      "verification": ["automatic", "agent", "human"],
+      "evidence": "License review, ownership and dependency inventory, scope map, text/asset digests, metadata and publication checks",
+      "exceptions": "Current task authorization persists. Never invent third-party rights. Record purpose-based license exceptions and unresolved human review."
+    },
+    {
+      "id": "LIC-004",
+      "scope": "core",
+      "level": "MUST",
+      "summary": "Per-project review and verified license delivery",
+      "verification": ["automatic", "agent", "human"],
+      "evidence": "License review, ownership and dependency inventory, scope map, text/asset digests, metadata and publication checks",
+      "exceptions": "Current task authorization persists. Never invent third-party rights. Record purpose-based license exceptions and unresolved human review."
     }
   ]
 }

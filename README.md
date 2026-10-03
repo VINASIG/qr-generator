@@ -55,3 +55,9 @@ The interface uses English, local Space Grotesk and VINASIG's adopted design tok
 Screen-based decoder tests do not replace a scan from the final physical print. Test the final size, contrast and viewing distance on the devices your audience uses.
 
 Content formats are interpreted by the scanner and destination app. An SMS reader may open only the recipient; calendar and contact actions also vary. These outputs do not automatically send messages, call numbers or import events. Check the final action on the intended devices.
+
+## License scopes
+
+VINASIG-authored software uses **AGPL-3.0-or-later**. Authored documentation uses **CC-BY-SA-4.0**. Commercial use is allowed under those standard licenses. Fonts and third-party components retain their original terms. Official VINASIG identity assets follow the separate brand policy.
+
+Read [LICENSE](LICENSE), [LICENSES.md](LICENSES.md), [VINASIG Brand Usage Policy](BRAND_POLICY.md) and [the licensing review](docs/audits/licensing-2026-10-04.md) for exact scopes, rationale and remaining review.
