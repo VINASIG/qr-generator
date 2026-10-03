@@ -11,11 +11,12 @@ permissions:
 
 jobs:
   verify:
-    name: Verify on ${{ matrix.os }}
+    name: Verify on ${{ matrix.os }} - ${{ matrix.browser }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        browser: [chromium, firefox, webkit]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
@@ -35,17 +36,17 @@ jobs:
       - name: Build publication folder
         run: npx --yes npm@12.2.0 run build
       - name: Install supported browsers
-        run: npx --yes npm@12.2.0 exec playwright -- install --with-deps chromium firefox webkit
+        run: npx --yes npm@12.2.0 exec playwright -- install --with-deps ${{ matrix.browser }}
       - name: Check browser flows and responsive layout
-        run: npx --yes npm@12.2.0 run test:browser
+        run: npx --yes npm@12.2.0 run test:browser -- --project=${{ matrix.browser }}
       - name: Check lab performance budgets
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.browser == 'chromium'
         run: npx --yes npm@12.2.0 run test:performance
       - name: Keep verification evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: verification-${{ matrix.os }}
+          name: verification-${{ matrix.os }}-${{ matrix.browser }}
           path: |
             output/checks/
             output/responsive/
@@ -54,7 +55,7 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
       - name: Package checked Pages files
-        if: runner.os == 'Linux' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: runner.os == 'Linux' && matrix.browser == 'chromium' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist

@@ -39,7 +39,7 @@ npm run test:browser
 npm run test:performance
 ```
 
-The production preview uses an automatically selected loopback port through `npm run preview`. Browser tests start and close their own production server. CI requires all three engines on Windows and Linux before deployment.
+The production preview uses an automatically selected loopback port through `npm run preview`. Browser tests start and close their own production server. CI requires all three engines on Windows and Linux before deployment. Each engine has its own runner and verification artifact to keep the full screenshot and failure-trace coverage within the runner's disk capacity. The Linux Chromium job also checks performance and packages the site. Deployment waits for all six verification jobs.
 
 ## Decisions and evidence
 
