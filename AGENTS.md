@@ -2,7 +2,7 @@
 
 This static Astro and TypeScript project creates traditional QR codes locally. Read README.md, docs/PRODUCT.md, docs/BRAND.md and docs/TOOLCHAIN.md before changing the product.
 
-- Keep the primary flow short. Encode URL or text exactly as entered, or build a standard Wi-Fi payload. Export black-on-white PNG and SVG with a four-module quiet zone. Do not inject VINASIG branding or a redirect into generated codes.
+- Keep the primary flow short. Encode URL or text exactly as entered, or build the documented Wi-Fi, email, phone, SMS, vCard, geo and iCalendar payloads. Image/PDF/file codes contain a direct HTTP(S) link, not an upload. Keep optional details and advanced settings collapsed by default. Export black-on-white PNG and SVG with at least a four-module quiet zone. Do not inject VINASIG branding or a redirect into generated codes.
 - Do not add accounts, tracking, analytics, remote QR APIs, persistent payload storage, cookie prompts or a server dependency without a user request.
 - Preserve supplied VINASIG assets and font notices. This product adopts the shared Bright Playful Minimalism proposal. Use local Space Grotesk, semantic tokens and Lucide interface icons. Simple Icons is reserved for third-party marks when needed.
 - Keep public copy and technical documentation in concise English. Respond to the user in Vietnamese. Use SI agents in VINASIG-authored terminology.

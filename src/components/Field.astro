@@ -1,0 +1,57 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  type?: 'text' | 'email' | 'tel' | 'url' | 'date' | 'time';
+  rows?: number;
+  placeholder?: string;
+  help?: string;
+  helpIds?: string;
+  required?: boolean;
+  inputmode?: 'text' | 'decimal';
+}
+const {
+  id,
+  label,
+  type = 'text',
+  rows,
+  placeholder,
+  help,
+  helpIds,
+  required = false,
+  inputmode = 'text',
+} = Astro.props;
+const describedby =
+  (help ? id + '-help ' : '') + (helpIds ? helpIds + ' ' : '') + 'form-status';
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  {rows ? (
+    <textarea
+      id={id}
+      rows={rows}
+      placeholder={placeholder}
+      required={required}
+      spellcheck="false"
+      autocomplete="off"
+      aria-describedby={describedby}
+    ></textarea>
+  ) : (
+    <input
+      id={id}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      inputmode={inputmode === 'decimal' ? 'decimal' : undefined}
+      spellcheck="false"
+      autocomplete="off"
+      aria-describedby={describedby}
+    />
+  )}
+  {help && (
+    <p id={id + '-help'} class="supporting">
+      {help}
+    </p>
+  )}
+</div>

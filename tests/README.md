@@ -15,3 +15,13 @@ The single route is `/qr-generator/`. The viewport matrix covers the five VINASI
 Lighthouse keeps three comparable cold mobile and desktop reports. The adopted median budgets are LCP <= 2500 ms, CLS <= 0.1 and TBT <= 200 ms. TBT does not measure field INP. Performance reports describe their browser/throttle setup.
 
 Automated accessibility and independent screen decoder checks are partial evidence. Physical printed scans, actual Wi-Fi connection, screen readers, fresh Codex discovery, independent SI-agent use, field vitals and search dashboard outcomes require separate observations and remain NOT_RUN unless recorded.
+
+## Expanded content and settings regression
+
+`tests/payloads.test.ts` checks RFC-oriented email, global phone/extension, SMS, vCard, coordinates, file URLs and iCalendar. Cases cover reserved punctuation, UTF-8, CRLF, header/property injection, escaping/folding, coordinate bounds, invalid/reversed/leap dates, inclusive all-day input and UTC conversion. `tests/qr.test.ts` covers L/M/Q/H, every mask, all borders, minimum-version errors and byte/numeric capacity differences. The shared test helper independently decodes matrix pixels with jsQR.
+
+Browser cases check each new type at the five standard sizes in light and dark. They decode actual downloaded PNG/SVG, validate errors/focus, one active form, clear/stale output and no content requests/cookies/storage. SVG is rasterized at an integer multiple of its exported grid before independent decoding, so a tiny preview's sampling is not mistaken for corrupt vector data.
+
+Additional cases cover each new form at 320 px with 200% root text and expanded extras/settings. Existing intermediate/breakpoint cases also open settings and technical details. Settings cases cover every option's invalidation, capacity/version errors, border geometry, clear defaults and delayed URL cleanup. Calendar cases verify separate date/time controls at 200% text, missing-time focus, preserved dates/times when toggling all-day and exclusion of disabled times from all-day output. They fix the browser timezone to Asia/Ho_Chi_Minh and verify UTC bytes; the visible zone must match the engine's resolved IANA name because some return the equivalent Asia/Saigon alias.
+
+Set `CAPTURE_RUN=features-2026-10-03` to put screenshots and geometry/style reports in `output/responsive/features-2026-10-03/`. Initial before evidence remains immutable in its separate `before/` directory. Reports contain fixture data only. Opening screenshots is still required; geometry/decoding do not validate visual layout or a native operating-system popup.

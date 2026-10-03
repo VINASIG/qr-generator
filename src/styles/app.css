@@ -152,7 +152,8 @@ legend {
   font-weight: 500;
 }
 
-:where(.fields) > label:not(:where(.check-label)) {
+:where(.fields) > label:not(:where(.check-label)),
+:where(.field) > label {
   display: block;
   font-weight: 500;
   margin-bottom: 0.5rem;
@@ -165,9 +166,6 @@ details p {
 }
 
 .content-type {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -193,8 +191,7 @@ input[type='radio'] {
   accent-color: var(--color-info-accent);
 }
 
-input[type='text'],
-input[type='password'],
+input:where(:not([type='checkbox'], [type='radio'])),
 textarea,
 select {
   width: 100%;
@@ -202,7 +199,7 @@ select {
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
-  padding: 0.75rem;
+  padding: 0.75rem min(0.75rem, 12px);
   min-height: 48px;
 }
 
@@ -213,25 +210,87 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+textarea[rows='3'] {
+  min-height: 6rem;
+}
+
+input::placeholder,
 textarea::placeholder {
   color: var(--color-text-muted);
+  font-size: var(--font-size-small);
   opacity: 1;
 }
 
 input[aria-invalid='true'],
+select[aria-invalid='true'],
 textarea[aria-invalid='true'] {
   border-color: var(--color-error);
 }
 
-:where(#wifi-fields) > input,
-:where(#wifi-fields) > select {
+.field-grid,
+.advanced-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 1rem;
+}
+
+.field-grid > *,
+.advanced-controls > * {
+  min-width: 0;
+}
+
+:where(.fields) > input,
+:where(.fields) > select,
+.fields > .field,
+.fields > .field-grid {
   margin-bottom: 1rem;
+}
+
+.field input,
+.field select {
+  display: block;
+  max-width: 100%;
 }
 
 .supporting {
   color: var(--color-text-muted);
   font-size: var(--font-size-small);
   line-height: 1.6;
+}
+
+.field > .supporting {
+  margin: 0.5rem 0 0;
+}
+
+.advanced-settings {
+  margin-top: 1.5rem;
+}
+
+.advanced-settings .supporting {
+  margin-top: 0.75rem;
+  font-size: var(--font-size-small);
+}
+
+.code-facts {
+  margin: 0 0 1rem;
+  font-size: var(--font-size-small);
+}
+
+.code-facts > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.code-facts dt {
+  color: var(--color-text-muted);
+}
+
+.code-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .fields > .supporting {

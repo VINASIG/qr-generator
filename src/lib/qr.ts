@@ -3,9 +3,30 @@ import QRCode from 'qrcode';
 export const MAX_BYTES = 2000;
 export const QUIET_ZONE = 4;
 export type ImageSize = 512 | 1024 | 2048;
+export type ErrorCorrection = 'L' | 'M' | 'Q' | 'H';
+export type QuietZone = 4 | 8 | 12;
+export interface QrOptions {
+  errorCorrectionLevel?: ErrorCorrection;
+  quietZone?: QuietZone;
+  version?: number;
+  maskPattern?: number;
+}
+export class InputError extends Error {
+  readonly field: string;
+  constructor(field: string, message: string) {
+    super(message);
+    this.field = field;
+    this.name = 'InputError';
+  }
+}
 export interface Matrix {
   size: number;
   data: Uint8Array;
+  version: number;
+  maskPattern: number;
+  errorCorrectionLevel: ErrorCorrection;
+  quietZone: QuietZone;
+  bytes: number;
 }
 export interface WifiInput {
   ssid: string;
@@ -13,18 +34,25 @@ export interface WifiInput {
   security: 'WPA' | 'WEP' | 'nopass';
   hidden: boolean;
 }
-const byteLength = (value: string): number =>
+export const byteLength = (value: string): number =>
   new TextEncoder().encode(value).length;
 
 export function validatePayload(value: string): string {
   if (!value.trim())
-    throw new Error('Enter a link or some text to create your QR code.');
+    throw new InputError(
+      'content',
+      'Enter a link or some text to create your QR code.',
+    );
   if (byteLength(value) > MAX_BYTES)
-    throw new Error(
+    throw new InputError(
+      'content',
       'This is too long for one QR code. Use a shorter link or less text.',
     );
   if (/[\uD800-\uDFFF]/u.test(value))
-    throw new Error('Remove incomplete Unicode characters from your content.');
+    throw new InputError(
+      'content',
+      'Remove incomplete Unicode characters from your content.',
+    );
   if (
     Array.from(value).some((character) => {
       const code = character.charCodeAt(0);
@@ -33,7 +61,10 @@ export function validatePayload(value: string): string {
       );
     })
   )
-    throw new Error('Remove unsupported control characters from your content.');
+    throw new InputError(
+      'content',
+      'Remove unsupported control characters from your content.',
+    );
   return value;
 }
 
@@ -43,22 +74,32 @@ const wifiEscape = (value: string): string => {
 };
 
 export function wifiPayload(input: WifiInput): string {
-  if (!input.ssid.trim()) throw new Error('Enter the Wi-Fi network name.');
+  if (!input.ssid.trim())
+    throw new InputError('ssid', 'Enter the Wi-Fi network name.');
   if (byteLength(input.ssid) > 32)
-    throw new Error('The Wi-Fi network name must fit within 32 UTF-8 bytes.');
+    throw new InputError(
+      'ssid',
+      'The Wi-Fi network name must fit within 32 UTF-8 bytes.',
+    );
   if (
     Array.from(input.ssid + input.password).some((character) => {
       const code = character.charCodeAt(0);
       return code < 32 || code === 127;
     })
   )
-    throw new Error('Remove control characters from the Wi-Fi details.');
+    throw new InputError(
+      'ssid',
+      'Remove control characters from the Wi-Fi details.',
+    );
   if (!['WPA', 'WEP', 'nopass'].includes(input.security))
-    throw new Error('Choose a supported Wi-Fi security type.');
+    throw new InputError('security', 'Choose a supported Wi-Fi security type.');
   if (input.security !== 'nopass' && !input.password)
-    throw new Error('Enter the Wi-Fi password, or choose an open network.');
+    throw new InputError(
+      'password',
+      'Enter the Wi-Fi password, or choose an open network.',
+    );
   if (byteLength(input.password) > 128)
-    throw new Error('The Wi-Fi password is too long.');
+    throw new InputError('password', 'The Wi-Fi password is too long.');
   const password =
     input.security === 'nopass' ? '' : ';P:' + wifiEscape(input.password);
   return validatePayload(
@@ -73,23 +114,91 @@ export function wifiPayload(input: WifiInput): string {
   );
 }
 
-export function makeMatrix(payload: string): Matrix {
-  const code = QRCode.create(validatePayload(payload), {
-    errorCorrectionLevel: 'M',
-  });
-  return { size: code.modules.size, data: new Uint8Array(code.modules.data) };
+export function makeMatrix(payload: string, options: QrOptions = {}): Matrix {
+  validatePayload(payload);
+  const level = options.errorCorrectionLevel ?? 'M';
+  const quietZone = options.quietZone ?? QUIET_ZONE;
+  if (!['L', 'M', 'Q', 'H'].includes(level))
+    throw new InputError(
+      'error-correction',
+      'Choose a supported error correction level.',
+    );
+  if (![4, 8, 12].includes(quietZone))
+    throw new InputError(
+      'quiet-zone',
+      'Keep a white border of 4, 8 or 12 modules.',
+    );
+  if (
+    options.version !== undefined &&
+    (!Number.isInteger(options.version) ||
+      options.version < 1 ||
+      options.version > 40)
+  )
+    throw new InputError(
+      'qr-version',
+      'Choose Auto or a QR version from 1 to 40.',
+    );
+  if (
+    options.maskPattern !== undefined &&
+    (!Number.isInteger(options.maskPattern) ||
+      options.maskPattern < 0 ||
+      options.maskPattern > 7)
+  )
+    throw new InputError(
+      'mask-pattern',
+      'Choose Auto or a mask pattern from 0 to 7.',
+    );
+  let code: QRCode.QRCode;
+  try {
+    code = QRCode.create(payload, { errorCorrectionLevel: level });
+  } catch {
+    throw new InputError(
+      'error-correction',
+      'This content will not fit at level ' +
+        level +
+        '. Use less content or a lower error correction level.',
+    );
+  }
+  if (options.version !== undefined && options.version < code.version)
+    throw new InputError(
+      'qr-version',
+      'This content needs version ' +
+        String(code.version) +
+        ' or larger at level ' +
+        level +
+        '. Choose Auto or a larger version.',
+    );
+  if (options.version !== undefined || options.maskPattern !== undefined)
+    code = QRCode.create(payload, {
+      errorCorrectionLevel: level,
+      ...(options.version !== undefined ? { version: options.version } : {}),
+      ...(options.maskPattern !== undefined
+        ? { maskPattern: options.maskPattern as QRCode.QRCodeMaskPattern }
+        : {}),
+    });
+  if (code.maskPattern === undefined)
+    throw new Error('The QR encoder did not return a mask pattern.');
+  return {
+    size: code.modules.size,
+    data: new Uint8Array(code.modules.data),
+    version: code.version,
+    maskPattern: code.maskPattern,
+    errorCorrectionLevel: level,
+    quietZone,
+    bytes: byteLength(payload),
+  };
 }
 
 export function geometry(matrix: Matrix, pixels: ImageSize) {
-  const scale = Math.floor(pixels / (matrix.size + 2 * QUIET_ZONE));
+  const scale = Math.floor(pixels / (matrix.size + 2 * matrix.quietZone));
   const offset = Math.floor((pixels - matrix.size * scale) / 2);
-  if (scale < 1 || offset < QUIET_ZONE * scale)
+  if (scale < 1 || offset < matrix.quietZone * scale)
     throw new Error('Choose a larger PNG size for this content.');
   return { scale, offset, pixels };
 }
 
 export function svgSource(matrix: Matrix): string {
-  const width = matrix.size + QUIET_ZONE * 2;
+  const width = matrix.size + matrix.quietZone * 2;
   let shape = '';
   for (let row = 0; row < matrix.size; row++) {
     let column = 0;
@@ -103,9 +212,9 @@ export function svgSource(matrix: Matrix): string {
         column++;
       shape +=
         'M' +
-        String(start + QUIET_ZONE) +
+        String(start + matrix.quietZone) +
         ' ' +
-        String(row + QUIET_ZONE) +
+        String(row + matrix.quietZone) +
         'h' +
         String(column - start) +
         'v1h-' +

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import jsQR from 'jsqr';
+import { decode } from './helpers/decode.ts';
 import {
   geometry,
   makeMatrix,
@@ -10,27 +10,6 @@ import {
   validatePayload,
   wifiPayload,
 } from '../src/lib/qr.ts';
-import type { Matrix } from '../src/lib/qr.ts';
-
-function decode(matrix: Matrix): string | undefined {
-  const { scale, offset, pixels } = geometry(matrix, 512);
-  const rgba = new Uint8ClampedArray(pixels * pixels * 4).fill(255);
-  for (let row = 0; row < matrix.size; row++)
-    for (let column = 0; column < matrix.size; column++)
-      if (matrix.data[row * matrix.size + column]) {
-        for (let y = 0; y < scale; y++)
-          for (let x = 0; x < scale; x++) {
-            const index =
-              ((offset + row * scale + y) * pixels +
-                offset +
-                column * scale +
-                x) *
-              4;
-            rgba[index] = rgba[index + 1] = rgba[index + 2] = 0;
-          }
-      }
-  return jsQR(rgba, pixels, pixels)?.data;
-}
 for (const payload of [
   'https://example.com/path?a=one&b=two#section',
   ' leading and trailing spaces ',
@@ -141,3 +120,85 @@ void test('SVG is self-contained vector geometry with no input markup or remote 
       !svg.includes('<text'),
   );
 });
+
+for (const level of ['L', 'M', 'Q', 'H'] as const)
+  void test(
+    'error correction ' + level + ' independently decodes exact Unicode',
+    () => {
+      const payload = 'Tiếng Việt • https://example.com/?a=1&b=2';
+      const matrix = makeMatrix(payload, { errorCorrectionLevel: level });
+      assert.equal(matrix.errorCorrectionLevel, level);
+      assert.equal(matrix.bytes, new TextEncoder().encode(payload).length);
+      assert.equal(matrix.size, 17 + 4 * matrix.version);
+      assert.equal(decode(matrix), payload);
+    },
+  );
+for (const mask of [0, 1, 2, 3, 4, 5, 6, 7])
+  void test('mask ' + String(mask) + ' keeps the same content', () => {
+    const matrix = makeMatrix('Mask fixture', {
+      maskPattern: mask,
+      version: 5,
+    });
+    assert.equal(matrix.maskPattern, mask);
+    assert.equal(matrix.version, 5);
+    assert.equal(matrix.size, 37);
+    assert.equal(decode(matrix), 'Mask fixture');
+  });
+for (const quietZone of [4, 8, 12] as const)
+  void test(
+    'quiet zone ' + String(quietZone) + ' is retained in PNG geometry and SVG',
+    () => {
+      const matrix = makeMatrix('Border fixture', { quietZone });
+      for (const pixels of [512, 1024, 2048] as const) {
+        const { scale, offset } = geometry(matrix, pixels);
+        assert.equal(Math.floor(scale), scale);
+        assert(offset >= quietZone * scale);
+        assert(pixels - offset - matrix.size * scale >= quietZone * scale);
+      }
+      assert(
+        svgSource(matrix).includes(
+          'viewBox="0 0 ' + String(matrix.size + quietZone * 2),
+        ),
+      );
+      assert.equal(decode(matrix), 'Border fixture');
+    },
+  );
+void test('a version too small explains the minimum version and preserves automatic generation', () => {
+  const payload = 'a'.repeat(100);
+  const minimum = makeMatrix(payload).version;
+  assert.throws(
+    () => makeMatrix(payload, { version: 1 }),
+    new RegExp('needs version ' + String(minimum)),
+  );
+  assert.equal(decode(makeMatrix(payload, { version: minimum })), payload);
+  assert.equal(makeMatrix('x', { version: 40 }).size, 177);
+});
+void test('correction capacity uses actual encoder modes rather than a false universal character limit', () => {
+  assert.equal(
+    decode(makeMatrix('a'.repeat(1273), { errorCorrectionLevel: 'H' })),
+    'a'.repeat(1273),
+  );
+  assert.throws(
+    () => makeMatrix('a'.repeat(1274), { errorCorrectionLevel: 'H' }),
+    /will not fit at level H/u,
+  );
+  assert.equal(
+    decode(makeMatrix('1'.repeat(2000), { errorCorrectionLevel: 'H' })),
+    '1'.repeat(2000),
+  );
+  assert.throws(
+    () => makeMatrix('1'.repeat(2001), { errorCorrectionLevel: 'L' }),
+    /too long/u,
+  );
+});
+for (const options of [
+  { version: 0 },
+  { version: 41 },
+  { version: 2.5 },
+  { maskPattern: -1 },
+  { maskPattern: 8 },
+  { maskPattern: NaN },
+])
+  void test('invalid technical settings ' + JSON.stringify(options), () => {
+    assert.throws(() => makeMatrix('Fixture', options));
+  });

@@ -1,16 +1,19 @@
 # VINASIG QR Generator
 
-Create traditional static QR codes for URLs, text and Wi-Fi. Generation happens in the browser, and the output contains the supplied content directly.
+Create traditional static QR codes for links, text, Wi-Fi, email, phone calls, SMS, contacts, locations and calendar events. Generation happens in the browser, and the output contains the supplied content directly.
 
 The intended public website is [VINASIG QR Generator](https://vinasig.github.io/qr-generator/). The source is maintained at [VINASIG/qr-generator](https://github.com/VINASIG/qr-generator). Publication results are verified for an exact commit and recorded separately from this source description.
 
 ## A focused tool
 
 - Enter a complete URL or any text, then create a code.
-- Use the optional Wi-Fi form for personal WPA, WEP or open networks.
+- Choose one content type; only its fields are shown. Contact and event extras stay collapsed until needed.
+- Use Wi-Fi for personal WPA, WEP or open networks; email, phone and SMS for compatible app actions; vCard for a contact; coordinates for a location; or iCalendar for an event.
+- Share an image, PDF or other file using its direct HTTP(S) link. The file stays with its existing host; it is not embedded or uploaded here.
+- Leave Advanced settings closed for everyday use, or choose error correction L/M/Q/H, a 4/8/12-module border, version 1-40 and mask 0-7. Version and mask default to Auto.
 - Download PNG at 512, 1024 or 2048 pixels, or a scalable SVG.
-- Inspect the exact encoded content before sharing it.
-- Clear your input and start again. Editing input or size immediately disables old exports.
+- Inspect the exact encoded content and generated technical details before sharing it.
+- Clear all input and restore defaults. Editing input, content type, size or technical settings immediately disables old exports.
 
 No account, subscription, app cookies, analytics, history storage or QR redirect service is part of this application. It never requests the destination URL or uploads payloads. Hosting receives normal page requests. After the application loads, creation and export can work without a network connection. Offline reload or installation is not provided.
 
@@ -44,8 +47,11 @@ The production preview uses an automatically selected loopback port through `npm
 - [Brand adoption](docs/BRAND.md), [pinned assets](docs/asset-manifest.json) and [SI-agent standards](docs/STANDARDS.md)
 - [Toolchain and version decisions](docs/TOOLCHAIN.md)
 - [Tests and verification boundaries](tests/README.md)
+- [Content expansion audit](docs/audits/2026-10-03-content-types.md)
 - [Source and artwork rights](LICENSE_STATUS.md) and [third-party notices](THIRD_PARTY_NOTICES.md)
 
-The interface uses English, local Space Grotesk and VINASIG's adopted design tokens. QR exports are black on white, keep at least a four-module quiet zone and contain no VINASIG logo, watermark or remote resources. PNG modules use integer pixel sizes. Error correction is fixed at M, and input is limited to 2,000 UTF-8 bytes.
+The interface uses English, local Space Grotesk and VINASIG's adopted design tokens. QR exports use standard Model 2, are black on white, keep at least a four-module quiet zone and contain no VINASIG logo, watermark or remote resources. PNG modules use integer pixel sizes. Error correction defaults to M. Content is limited to 2,000 UTF-8 bytes and must fit its selected correction level and version. Higher correction can require a denser code; an explicit version that is too small produces a correction rather than a broken export.
 
 Screen-based decoder tests do not replace a scan from the final physical print. Test the final size, contrast and viewing distance on the devices your audience uses.
+
+Content formats are interpreted by the scanner and destination app. An SMS reader may open only the recipient; calendar and contact actions also vary. These outputs do not automatically send messages, call numbers or import events. Check the final action on the intended devices.

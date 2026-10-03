@@ -1,0 +1,239 @@
+---
+import Field from './Field.astro';
+---
+
+<fieldset
+  id="email-fields"
+  class="fields"
+  data-content-type="email"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">Email details</legend>
+  <Field
+    id="email-to"
+    label="Email address"
+    type="email"
+    placeholder="e.g. hello@example.com"
+    required
+  />
+  <Field
+    id="email-subject"
+    label="Subject (optional)"
+    placeholder="e.g. A quick question"
+  />
+  <Field id="email-body" label="Message (optional)" rows={3} />
+  <p class="supporting">
+    Opens an email draft in a compatible mail app. Scanning does not send it.
+  </p>
+</fieldset>
+<fieldset
+  id="phone-fields"
+  class="fields"
+  data-content-type="phone"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">Phone details</legend>
+  <Field
+    id="phone-number"
+    label="Phone number"
+    type="tel"
+    placeholder="e.g. +1 202 555 0100"
+    help="Include + and the country code. Spaces, dots, parentheses and hyphens are removed."
+    required
+  />
+  <Field
+    id="phone-extension"
+    label="Extension (optional)"
+    placeholder="e.g. 123"
+  />
+  <p class="supporting">
+    Opens the number in a compatible calling app. Review it before calling.
+  </p>
+</fieldset>
+<fieldset
+  id="sms-fields"
+  class="fields"
+  data-content-type="sms"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">SMS details</legend>
+  <Field
+    id="sms-number"
+    label="Recipient phone number"
+    type="tel"
+    placeholder="e.g. +1 202 555 0100"
+    help="Include + and the country code."
+    required
+  />
+  <Field id="sms-message" label="SMS message (optional)" rows={3} />
+  <p class="supporting">
+    Prepares an SMS in compatible readers. Some apps open only the recipient;
+    test the message on your intended devices. Nothing is sent here.
+  </p>
+</fieldset>
+<fieldset
+  id="contact-fields"
+  class="fields"
+  data-content-type="contact"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">Contact details</legend>
+  <Field
+    id="contact-name"
+    label="Full name"
+    placeholder="e.g. Alex Taylor"
+    required
+  />
+  <Field
+    id="contact-phone"
+    label="Contact phone (optional)"
+    type="tel"
+    placeholder="e.g. +1 202 555 0100"
+  />
+  <Field
+    id="contact-email"
+    label="Contact email (optional)"
+    type="email"
+    placeholder="e.g. alex@example.com"
+  />
+  <details id="contact-more" class="field-disclosure">
+    <summary>More contact details</summary>
+    <div class="fields">
+      <div class="field-grid">
+        <Field id="contact-given" label="Given name (optional)" />
+        <Field id="contact-family" label="Family name (optional)" />
+      </div>
+      <Field id="contact-organization" label="Organization (optional)" />
+      <Field
+        id="contact-website"
+        label="Website (optional)"
+        type="url"
+        placeholder="e.g. https://example.com"
+      />
+      <Field id="contact-note" label="Notes (optional)" rows={3} />
+    </div>
+  </details>
+  <p class="supporting">
+    Creates a vCard 3.0 contact. Anyone who scans the code can read these
+    details.
+  </p>
+</fieldset>
+<fieldset
+  id="location-fields"
+  class="fields"
+  data-content-type="location"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">Location coordinates</legend>
+  <div class="field-grid">
+    <Field
+      id="latitude"
+      label="Latitude"
+      inputmode="decimal"
+      placeholder="e.g. 10.7769"
+      required
+    />
+    <Field
+      id="longitude"
+      label="Longitude"
+      inputmode="decimal"
+      placeholder="e.g. 106.7009"
+      required
+    />
+  </div>
+  <p class="supporting">
+    Decimal degrees in WGS 84: latitude -90 to 90, longitude -180 to 180. Opens
+    a location in compatible map apps. We do not request your location.
+  </p>
+</fieldset>
+<fieldset
+  id="event-fields"
+  class="fields"
+  data-content-type="event"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">Calendar event details</legend>
+  <Field
+    id="event-title"
+    label="Event title"
+    placeholder="e.g. Community meetup"
+    required
+  />
+  <label class="check-label">
+    <input id="event-all-day" type="checkbox" /> All-day event
+  </label>
+  <div class="field-grid">
+    <Field
+      id="event-start"
+      label="Start date"
+      type="date"
+      helpIds="event-timezone"
+      required
+    />
+    <Field
+      id="event-start-time"
+      label="Start time"
+      type="time"
+      helpIds="event-timezone"
+      required
+    />
+  </div>
+  <div class="field-grid">
+    <Field
+      id="event-end"
+      label="End date"
+      type="date"
+      helpIds="event-timezone"
+      required
+    />
+    <Field
+      id="event-end-time"
+      label="End time"
+      type="time"
+      helpIds="event-timezone"
+      required
+    />
+  </div>
+  <p id="event-timezone" class="supporting">
+    Timed events use this device's timezone and are encoded in UTC. For all-day
+    events, End date is the last day included.
+  </p>
+  <details id="event-more" class="field-disclosure">
+    <summary>More event details</summary>
+    <div class="fields">
+      <Field id="event-location" label="Event location (optional)" />
+      <Field id="event-description" label="Description (optional)" rows={3} />
+    </div>
+  </details>
+  <p class="supporting">
+    Creates an iCalendar event. Calendar actions depend on your scanner; test it
+    before sharing.
+  </p>
+</fieldset>
+<fieldset
+  id="file-fields"
+  class="fields"
+  data-content-type="file"
+  hidden
+  disabled
+>
+  <legend class="visually-hidden">Image, PDF or file link</legend>
+  <Field
+    id="file-url"
+    label="Image, PDF or file URL"
+    type="url"
+    placeholder="e.g. https://example.com/image.png"
+    required
+  />
+  <p class="supporting">
+    Use the complete public link to a file hosted elsewhere. The code contains
+    the link, not the file. We do not upload, host or fetch it; access and
+    availability depend on its host.
+  </p>
+</fieldset>

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile, access } from 'node:fs/promises';
+import { mkdir, readFile, access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
@@ -9,6 +9,8 @@ import jsQR from 'jsqr';
 import { startServer } from '../../scripts/serve.ts';
 import { wifiPayload } from '../../src/lib/qr.ts';
 
+test.use({ timezoneId: 'Asia/Ho_Chi_Minh' });
+
 let app: Awaited<ReturnType<typeof startServer>>;
 test.beforeAll(async () => {
   app = await startServer(path.resolve('dist'));
@@ -17,6 +19,10 @@ test.afterAll(async () => {
   await app.close();
 });
 const phase = process.env['CAPTURE_PHASE'] === 'before' ? 'before' : 'after';
+const captureRun = process.env['CAPTURE_RUN'];
+if (captureRun && !/^[a-z\d-]+$/u.test(captureRun))
+  throw new Error('Use a simple capture run name');
+const captureRoot = 'output/responsive' + (captureRun ? '/' + captureRun : '');
 const viewports = [
   { width: 320, height: 800 },
   { width: 360, height: 800 },
@@ -83,9 +89,10 @@ async function capture(
   expect(geometry.body, JSON.stringify(geometry)).toBeLessThanOrEqual(
     geometry.width + 1,
   );
-  await mkdir('output/responsive', { recursive: true });
+  await mkdir(captureRoot, { recursive: true });
   const name =
-    'output/responsive/' +
+    captureRoot +
+    '/' +
     phase +
     '-home-' +
     String(viewport.width) +
@@ -106,6 +113,34 @@ async function capture(
     if (exists) throw new Error('Before screenshots must remain immutable');
   }
   await page.screenshot({ path: name, fullPage: true });
+  await writeFile(
+    name.replace(/\.png$/u, '.json'),
+    JSON.stringify(
+      {
+        geometry,
+        browser: info.project.name,
+        state,
+        controls: await page
+          .locator('input, textarea, select, button, summary')
+          .evaluateAll((nodes) =>
+            nodes
+              .filter((node) => node.getClientRects().length > 0)
+              .map((node) => ({
+                id: node.id,
+                tag: node.tagName,
+                bounds: (() => {
+                  const r = node.getBoundingClientRect();
+                  return { x: r.x, y: r.y, width: r.width, height: r.height };
+                })(),
+                font: getComputedStyle(node).fontSize,
+                minWidth: getComputedStyle(node).minWidth,
+              })),
+          ),
+      },
+      null,
+      2,
+    ),
+  );
 }
 async function generate(page: Page, payload: string): Promise<void> {
   await page.getByRole('textbox', { name: 'Link or text' }).fill(payload);
@@ -179,7 +214,12 @@ for (const viewport of viewports)
         await page.getByText('Encoded content', { exact: true }).click();
         await page.getByText('Before you print', { exact: true }).click();
         await capture(page, info, 'long-success-notes-open');
-        await page.getByRole('radio', { name: 'Wi-Fi', exact: true }).check();
+        await page.getByText('Advanced settings', { exact: true }).click();
+        await page.getByText('Technical details', { exact: true }).click();
+        await capture(page, info, 'advanced-open');
+        await page
+          .getByLabel('Content type', { exact: true })
+          .selectOption('wifi');
         await page
           .getByRole('textbox', { name: 'Network name' })
           .fill('Cafe; Guest');
@@ -318,7 +358,7 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
 }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(app.url);
-  await page.getByRole('radio', { name: 'Wi-Fi', exact: true }).check();
+  await page.getByLabel('Content type', { exact: true }).selectOption('wifi');
   await page.getByRole('button', { name: 'Create QR code' }).click();
   await expect(page.getByRole('status')).toContainText('network name');
   await page.getByRole('textbox', { name: 'Network name' }).fill('Cafe; West');
@@ -373,7 +413,7 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
   await page
     .getByRole('textbox', { name: 'Link or text' })
     .fill('Previous text');
-  await page.getByRole('radio', { name: 'Wi-Fi', exact: true }).check();
+  await page.getByLabel('Content type', { exact: true }).selectOption('wifi');
   await page
     .getByLabel('Network name', { exact: true })
     .fill('Fixture network');
@@ -389,9 +429,9 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
   await page.getByRole('button', { name: 'Clear', exact: true }).click();
   await capture(page, info, 'cleared-from-wifi');
   const text = page.getByRole('textbox', { name: 'Link or text' });
-  await expect(
-    page.getByRole('radio', { name: 'URL or text', exact: true }),
-  ).toBeChecked();
+  await expect(page.getByLabel('Content type', { exact: true })).toHaveValue(
+    'text',
+  );
   await expect(text).toBeVisible();
   await expect(text).toBeEnabled();
   await expect(text).toHaveValue('');
@@ -455,11 +495,27 @@ test('keyboard, native selection and touch work without hover', async ({
       'Your QR code is ready',
     );
     await page.getByRole('button', { name: 'Clear', exact: true }).tap();
-    await page.getByRole('radio', { name: 'Wi-Fi', exact: true }).tap();
+    await expect(
+      page.getByLabel('Link or text', { exact: true }),
+    ).toBeFocused();
+    const type = page.getByLabel('Content type', { exact: true });
+    await type.tap();
+    await page.keyboard.press('Escape');
+    await type.focus();
+    // Native typeahead works across platforms after dismissing a touch popup.
+    await page.keyboard.press('w');
+    await page.keyboard.press('Tab');
+    await expect(type).toHaveValue('wifi');
+    await expect(page.locator('#ssid')).toBeFocused();
+    await expect(page.locator('#wifi-fields')).toBeVisible();
+    await expect(page.locator('#wifi-fields')).toBeEnabled();
     const select = page.getByLabel('Security', { exact: true });
     await select.focus();
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Escape');
+    await page.keyboard.press('o');
+    await page.keyboard.press('Tab');
+    await expect(select).toHaveValue('nopass');
+    await expect(page.locator('#password-fields')).toBeHidden();
+    await expect(page.locator('#password')).toBeDisabled();
     await capture(page, info, 'native-select-keyboard');
     const box = await page
       .getByRole('button', { name: 'Create QR code' })
@@ -495,14 +551,8 @@ test('unavailable client script cannot submit QR content to the host', async ({
         exact: true,
       });
       await expect(create).toBeDisabled();
-      for (const id of [
-        'content',
-        'ssid',
-        'password',
-        'security',
-        'hidden-network',
-      ])
-        await expect(page.locator('#' + id)).not.toHaveAttribute('name', /./u);
+      for (const control of await page.locator('input, textarea, select').all())
+        await expect(control).not.toHaveAttribute('name', /./u);
       await create.click({ force: true });
       await content.press('Enter');
       await capture(
@@ -698,4 +748,570 @@ test('motion reverses promptly and respects reduced preference', async ({
   }));
   expect(style.transition).toBe('0s');
   expect(style.transform).toBe('none');
+});
+
+async function decodeSvg(page: Page, source: string): Promise<string> {
+  const raster = await page.evaluate(async (svg) => {
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    try {
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      // An integer multiple of the vector grid avoids sampling ambiguity.
+      canvas.width = canvas.height = image.naturalWidth * 4;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Missing SVG rasterizer');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/png').split(',')[1];
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }, source);
+  assert(raster);
+  return decodePng(Buffer.from(raster, 'base64')).text;
+}
+
+interface ContentFixture {
+  kind: string;
+  first: string;
+  values: Record<string, string>;
+  expected: string;
+  more?: string;
+}
+const contentFixtures: ContentFixture[] = [
+  {
+    kind: 'email',
+    first: 'email-to',
+    values: {
+      'email-to': 'hello+qr@example.com',
+      'email-subject': 'Tiếng Việt & Q?',
+      'email-body': 'Line 1\nLine 2',
+    },
+    expected:
+      'mailto:hello%2Bqr@example.com?subject=Ti%E1%BA%BFng%20Vi%E1%BB%87t%20%26%20Q%3F&body=Line%201%0D%0ALine%202',
+  },
+  {
+    kind: 'phone',
+    first: 'phone-number',
+    values: { 'phone-number': '+1 (202) 555-0100', 'phone-extension': '123' },
+    expected: 'tel:+12025550100;ext=123',
+  },
+  {
+    kind: 'sms',
+    first: 'sms-number',
+    values: {
+      'sms-number': '+1 202 555 0100',
+      'sms-message': 'Xin chào &\n!()*',
+    },
+    expected: 'sms:+12025550100?body=Xin%20ch%C3%A0o%20%26%0A%21%28%29%2A',
+  },
+  {
+    kind: 'contact',
+    first: 'contact-name',
+    more: 'More contact details',
+    values: {
+      'contact-name': 'Nguyễn; An, 😀',
+      'contact-given': 'An',
+      'contact-family': 'Nguyễn',
+      'contact-phone': '+1 202 555 0100',
+      'contact-email': 'a@example.com',
+      'contact-organization': 'One;Two',
+      'contact-website': 'https://example.com/path?x=1&y=2',
+      'contact-note': 'Line 1\nLine 2',
+    },
+    expected:
+      'BEGIN:VCARD\r\nVERSION:3.0\r\nN:Nguyễn;An;;;\r\nFN:Nguyễn\\; An\\, 😀\r\nTEL;TYPE=CELL:+12025550100\r\nEMAIL;TYPE=INTERNET:a@example.com\r\nORG:One\\;Two\r\nURL:https://example.com/path?x=1&y=2\r\nNOTE:Line 1\\nLine 2\r\nEND:VCARD\r\n',
+  },
+  {
+    kind: 'location',
+    first: 'latitude',
+    values: { latitude: '10,7769', longitude: '106.7009' },
+    expected: 'geo:10.7769,106.7009',
+  },
+  {
+    kind: 'event',
+    first: 'event-title',
+    more: 'More event details',
+    values: {
+      'event-title': 'Meet; greet, 😀',
+      'event-start': '2026-10-03',
+      'event-start-time': '09:00',
+      'event-end': '2026-10-03',
+      'event-end-time': '10:00',
+      'event-location': 'Room 1',
+      'event-description': 'Line 1\nLine 2',
+    },
+    expected:
+      'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//QR Generator//Static Event//EN\r\nBEGIN:VEVENT\r\nUID:urn:uuid:IDENTIFIER\r\nDTSTAMP:TIMESTAMP\r\nSUMMARY:Meet\\; greet\\, 😀\r\nDTSTART:20261003T020000Z\r\nDTEND:20261003T030000Z\r\nLOCATION:Room 1\r\nDESCRIPTION:Line 1\\nLine 2\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n',
+  },
+  {
+    kind: 'file',
+    first: 'file-url',
+    values: {
+      'file-url': 'https://example.com/Case%2F/image.png?x=one&y=two#file',
+    },
+    expected: 'https://example.com/Case%2F/image.png?x=one&y=two#file',
+  },
+];
+
+const standardViewports = viewports.filter((viewport) =>
+  [360, 390, 768, 1024, 1440].includes(viewport.width),
+);
+for (const viewport of standardViewports)
+  for (const theme of ['light', 'dark'] as const)
+    for (const fixture of contentFixtures) {
+      test(
+        'content types responsive ' +
+          fixture.kind +
+          ' ' +
+          String(viewport.width) +
+          ' ' +
+          theme,
+        async ({ page, context }, info) => {
+          const errors: string[] = [];
+          page.on('pageerror', (error) => errors.push(error.message));
+          await page.setViewportSize(viewport);
+          await page.emulateMedia({ colorScheme: theme });
+          await page.goto(app.url);
+          await page.evaluate(() => document.fonts.ready);
+          const requests: string[] = [];
+          page.on('request', (request) => {
+            if (
+              !request.url().startsWith('blob:') &&
+              !request.url().startsWith('data:')
+            )
+              requests.push(request.url());
+          });
+          await expect(page.locator('#advanced-settings')).not.toHaveAttribute(
+            'open',
+            '',
+          );
+          await expect(page.locator('#contact-more')).not.toHaveAttribute(
+            'open',
+            '',
+          );
+          await expect(page.locator('#event-more')).not.toHaveAttribute(
+            'open',
+            '',
+          );
+          await page
+            .getByLabel('Content type', { exact: true })
+            .selectOption(fixture.kind);
+          await expect(
+            page.locator('fieldset[data-content-type]:not([hidden])'),
+          ).toHaveCount(1);
+          await capture(page, info, theme + '-' + fixture.kind + '-empty');
+          await page
+            .getByRole('button', { name: 'Create QR code', exact: true })
+            .click();
+          await expect(page.locator('#' + fixture.first)).toBeFocused();
+          await expect(page.locator('#' + fixture.first)).toHaveAttribute(
+            'aria-invalid',
+            'true',
+          );
+          if (fixture.more)
+            await page.getByText(fixture.more, { exact: true }).click();
+          for (const [id, value] of Object.entries(fixture.values))
+            await page.locator('#' + id).fill(value);
+          await page
+            .getByRole('button', { name: 'Create QR code', exact: true })
+            .click();
+          await expect(page.getByRole('status')).toContainText(
+            'Your QR code is ready',
+          );
+          const payload = await page.locator('#encoded-content').textContent();
+          assert(payload);
+          if (fixture.kind === 'event') {
+            expect(payload).toMatch(
+              /UID:urn:uuid:[a-f\d-]{36}\r\nDTSTAMP:\d{8}T\d{6}Z\r\n/u,
+            );
+            expect(
+              payload.replace(
+                /UID:urn:uuid:[a-f\d-]{36}\r\nDTSTAMP:\d{8}T\d{6}Z\r\n/u,
+                'UID:urn:uuid:IDENTIFIER\r\nDTSTAMP:TIMESTAMP\r\n',
+              ),
+            ).toBe(fixture.expected);
+          } else expect(payload).toBe(fixture.expected);
+          expect(decodePng(await download(page, 'PNG')).text).toBe(payload);
+          expect(
+            await decodeSvg(
+              page,
+              (await download(page, 'SVG')).toString('utf8'),
+            ),
+          ).toBe(payload);
+          await page.getByText('Encoded content', { exact: true }).click();
+          await page.getByText('Technical details', { exact: true }).click();
+          await capture(page, info, theme + '-' + fixture.kind + '-ready');
+          const axe = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+            .analyze();
+          expect(axe.violations).toEqual([]);
+          await page.locator('#' + fixture.first).fill('changed');
+          await expect(
+            page.getByRole('button', { name: 'Download PNG', exact: true }),
+          ).toBeDisabled();
+          await expect(
+            page.getByRole('button', { name: 'Download SVG', exact: true }),
+          ).toBeDisabled();
+          await expect(
+            page.getByRole('img', { name: 'Generated QR code' }),
+          ).toBeHidden();
+          await page
+            .getByRole('button', { name: 'Clear', exact: true })
+            .click();
+          await expect(
+            page.getByLabel('Content type', { exact: true }),
+          ).toHaveValue('text');
+          await expect(
+            page.getByRole('textbox', { name: 'Link or text' }),
+          ).toBeFocused();
+          expect(
+            await page
+              .locator('input:not([type="checkbox"]), textarea')
+              .evaluateAll((nodes) =>
+                nodes.every(
+                  (node) =>
+                    (node instanceof HTMLInputElement ||
+                      node instanceof HTMLTextAreaElement) &&
+                    node.value === '',
+                ),
+              ),
+          ).toBe(true);
+          expect(await context.cookies()).toEqual([]);
+          expect(
+            await page.evaluate(() => ({
+              local: localStorage.length,
+              session: sessionStorage.length,
+              cookie: document.cookie,
+            })),
+          ).toEqual({ local: 0, session: 0, cookie: '' });
+          expect(requests).toEqual([]);
+          expect(errors).toEqual([]);
+        },
+      );
+    }
+
+for (const fixture of contentFixtures)
+  test(
+    'content types responsive ' + fixture.kind + ' 320 text 200%',
+    async ({ page }, info) => {
+      await page.setViewportSize({ width: 320, height: 800 });
+      await page.goto(app.url);
+      await page.addStyleTag({ content: 'html {font-size:200%}' });
+      await page
+        .getByLabel('Content type', { exact: true })
+        .selectOption(fixture.kind);
+      if (fixture.more)
+        await page.getByText(fixture.more, { exact: true }).click();
+      await page.getByText('Advanced settings', { exact: true }).click();
+      for (const [id, value] of Object.entries(fixture.values))
+        await page.locator('#' + id).fill(value);
+      if (fixture.kind === 'event') {
+        for (const id of ['event-start', 'event-end'])
+          await expect(page.locator('#' + id)).toHaveAttribute('type', 'date');
+        for (const id of ['event-start-time', 'event-end-time'])
+          await expect(page.locator('#' + id)).toHaveAttribute('type', 'time');
+        expect(
+          await page
+            .locator('#event-start')
+            .evaluate((input) => getComputedStyle(input).fontSize),
+        ).toBe('32px');
+      }
+      await page
+        .getByRole('button', { name: 'Create QR code', exact: true })
+        .click();
+      await expect(page.getByRole('status')).toContainText(
+        'Your QR code is ready',
+      );
+      await page.getByText('Encoded content', { exact: true }).click();
+      await page.getByText('Technical details', { exact: true }).click();
+      await capture(page, info, '320-text-200-' + fixture.kind + '-advanced');
+    },
+  );
+
+test('advanced options validate capacity, invalidate every setting and reset to safe defaults', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(app.url);
+  await page.getByText('Advanced settings', { exact: true }).click();
+  for (const [index, level] of ['L', 'M', 'Q', 'H'].entries()) {
+    await page
+      .getByLabel('Error correction', { exact: true })
+      .selectOption(level);
+    await page.getByLabel('White border', { exact: true }).selectOption('8');
+    await page.getByLabel('QR version', { exact: true }).selectOption('5');
+    await page
+      .getByLabel('Mask pattern', { exact: true })
+      .selectOption(String(index));
+    await generate(page, 'Settings fixture');
+    expect(decodePng(await download(page, 'PNG')).text).toBe(
+      'Settings fixture',
+    );
+    const svg = (await download(page, 'SVG')).toString('utf8');
+    expect(svg).toContain('viewBox="0 0 53 53"');
+    expect(await decodeSvg(page, svg)).toBe('Settings fixture');
+    await expect(page.locator('#code-correction')).toHaveText(level);
+    await expect(page.locator('#code-version')).toHaveText(
+      'Version 5 / 37 x 37',
+    );
+    await expect(page.locator('#code-mask')).toHaveText(
+      'Pattern ' + String(index),
+    );
+    await expect(page.locator('#code-border')).toHaveText('8 modules minimum');
+  }
+  for (const [label, value] of [
+    ['Error correction', 'M'],
+    ['White border', '12'],
+    ['QR version', '40'],
+    ['Mask pattern', '7'],
+  ]) {
+    assert(label && value);
+    await page.getByLabel(label, { exact: true }).selectOption(value);
+    await expect(
+      page.getByRole('button', { name: 'Download PNG', exact: true }),
+    ).toBeDisabled();
+    await expect(page.locator('#technical-details')).toBeHidden();
+    await generate(page, 'Settings fixture');
+  }
+  expect(decodePng(await download(page, 'PNG')).text).toBe('Settings fixture');
+  await page.getByLabel('QR version', { exact: true }).selectOption('1');
+  await generate(page, 'x');
+  await page
+    .getByRole('textbox', { name: 'Link or text' })
+    .fill('a'.repeat(100));
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText('needs version');
+  await expect(page.getByLabel('QR version', { exact: true })).toBeFocused();
+  await capture(page, info, 'version-too-small');
+  await page.getByLabel('QR version', { exact: true }).selectOption('auto');
+  await page.getByLabel('Error correction', { exact: true }).selectOption('H');
+  await page
+    .getByRole('textbox', { name: 'Link or text' })
+    .fill('a'.repeat(1274));
+  await page.getByText('Advanced settings', { exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText(
+    'will not fit at level H',
+  );
+  await expect(
+    page.getByLabel('Error correction', { exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole('button', { name: 'Download SVG', exact: true }),
+  ).toBeDisabled();
+  await capture(page, info, 'correction-capacity-error');
+  await page.getByLabel('Error correction', { exact: true }).selectOption('M');
+  await generate(page, 'Recovered settings');
+  expect(decodePng(await download(page, 'PNG')).text).toBe(
+    'Recovered settings',
+  );
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await expect(page.locator('#advanced-settings')).not.toHaveAttribute(
+    'open',
+    '',
+  );
+  await expect(page.locator('#error-correction')).toHaveValue('M');
+  await expect(page.locator('#quiet-zone')).toHaveValue('4');
+  await expect(page.locator('#qr-version')).toHaveValue('auto');
+  await expect(page.locator('#mask-pattern')).toHaveValue('auto');
+  await expect(page.locator('#image-size')).toHaveValue('1024');
+});
+
+test('calendar all-day, inclusive end, timezone and errors remain local', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto(app.url);
+  await page.getByLabel('Content type', { exact: true }).selectOption('event');
+  // Engines can return the IANA alias Asia/Saigon for Asia/Ho_Chi_Minh.
+  const zone = await page.evaluate(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
+  await expect(page.locator('#event-timezone')).toContainText('(' + zone + ')');
+  expect(
+    await page.evaluate(() => new Date('2026-10-03T09:00').getTimezoneOffset()),
+  ).toBe(-420);
+  await page.getByLabel('Event title', { exact: true }).fill('All-day fixture');
+  await page.getByLabel('Start date', { exact: true }).fill('2026-12-31');
+  await page.getByLabel('End date', { exact: true }).fill('2026-12-31');
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByLabel('Start time', { exact: true })).toBeFocused();
+  await expect(page.getByRole('status')).toContainText('Choose a time');
+  await page.getByLabel('Start time', { exact: true }).fill('09:00');
+  await page.getByLabel('End time', { exact: true }).fill('10:00');
+  await page.getByLabel('All-day event', { exact: true }).check();
+  await expect(page.locator('#event-start')).toHaveAttribute('type', 'date');
+  await expect(page.getByLabel('Start date', { exact: true })).toHaveValue(
+    '2026-12-31',
+  );
+  await expect(page.getByLabel('Start time', { exact: true })).toBeHidden();
+  await expect(page.getByLabel('Start time', { exact: true })).toBeDisabled();
+  await expect(page.getByLabel('End time', { exact: true })).toBeHidden();
+  await expect(page.getByLabel('End time', { exact: true })).toBeDisabled();
+  await page.getByLabel('End date', { exact: true }).fill('2026-12-30');
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText(
+    'last day must be on or after',
+  );
+  await expect(page.getByLabel('End date', { exact: true })).toBeFocused();
+  await page.getByLabel('End date', { exact: true }).fill('2026-12-31');
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText('Your QR code is ready');
+  const payload = decodePng(await download(page, 'PNG')).text;
+  expect(payload).toContain(
+    'DTSTART;VALUE=DATE:20261231\r\nDTEND;VALUE=DATE:20270101\r\n',
+  );
+  expect(payload).not.toMatch(/DT(?:START|END):/u);
+  await page.getByText('Encoded content', { exact: true }).click();
+  await capture(page, info, 'calendar-all-day');
+  await page.getByLabel('All-day event', { exact: true }).uncheck();
+  await expect(page.getByLabel('Start date', { exact: true })).toHaveValue(
+    '2026-12-31',
+  );
+  await expect(page.getByLabel('End date', { exact: true })).toHaveValue(
+    '2026-12-31',
+  );
+  await expect(page.getByLabel('Start time', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Start time', { exact: true })).toBeEnabled();
+  await expect(page.getByLabel('Start time', { exact: true })).toHaveValue(
+    '09:00',
+  );
+  await expect(page.getByLabel('End time', { exact: true })).toHaveValue(
+    '10:00',
+  );
+  await expect(
+    page.getByRole('button', { name: 'Download PNG', exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText('Your QR code is ready');
+  expect(decodePng(await download(page, 'PNG')).text).toContain(
+    'DTSTART:20261231T020000Z\r\nDTEND:20261231T030000Z\r\n',
+  );
+});
+
+test('optional details open at the invalid field and a changed type cannot revive an old PNG', async ({
+  page,
+}) => {
+  await page.goto(app.url);
+  await page
+    .getByLabel('Content type', { exact: true })
+    .selectOption('contact');
+  await page.getByLabel('Full name', { exact: true }).fill('Fixture contact');
+  await page.getByText('More contact details', { exact: true }).click();
+  await page
+    .getByLabel('Website (optional)', { exact: true })
+    .fill('javascript:alert(1)');
+  await page.getByText('More contact details', { exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(
+    page.getByLabel('Website (optional)', { exact: true }),
+  ).toBeFocused();
+  await expect(page.locator('#contact-more')).toHaveAttribute('open', '');
+  await expect(
+    page.getByLabel('Website (optional)', { exact: true }),
+  ).toHaveValue('javascript:alert(1)');
+  await page
+    .getByLabel('Website (optional)', { exact: true })
+    .fill('https://example.com');
+  await page
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click();
+  await expect(page.getByRole('status')).toContainText('Your QR code is ready');
+  await page.getByLabel('Content type', { exact: true }).selectOption('sms');
+  await expect(
+    page.getByRole('button', { name: 'Download PNG', exact: true }),
+  ).toBeDisabled();
+  await expect(page.locator('#encoded-content')).toHaveText('');
+  await expect(
+    page.getByLabel('Recipient phone number', { exact: true }),
+  ).toHaveValue('');
+});
+
+test('download URL cleanup preserves the selected settings and current preview', async ({
+  page,
+}) => {
+  await page.goto(app.url);
+  await page.clock.install();
+  await page.getByText('Advanced settings', { exact: true }).click();
+  await page.getByLabel('QR version', { exact: true }).selectOption('5');
+  await page.getByLabel('Mask pattern', { exact: true }).selectOption('7');
+  await page.getByLabel('White border', { exact: true }).selectOption('12');
+  await page.getByLabel('PNG size', { exact: true }).selectOption('512');
+  await generate(page, 'Download cleanup fixture');
+  expect(decodePng(await download(page, 'PNG')).text).toBe(
+    'Download cleanup fixture',
+  );
+  await page.clock.fastForward(60010);
+  await expect(page.locator('#advanced-settings')).toHaveAttribute('open', '');
+  await expect(page.locator('#image-size')).toHaveValue('512');
+  await expect(page.locator('#qr-version')).toHaveValue('5');
+  await expect(page.locator('#mask-pattern')).toHaveValue('7');
+  await expect(page.locator('#quiet-zone')).toHaveValue('12');
+  await expect(
+    page.getByRole('img', { name: 'Generated QR code' }),
+  ).toBeVisible();
+  expect(decodePng(await download(page, 'PNG')).text).toBe(
+    'Download cleanup fixture',
+  );
+});
+
+test('oversized structured content focuses its visible or collapsed field without leaking to another type', async ({
+  page,
+}) => {
+  await page.goto(app.url);
+  for (const [kind, first, large, more] of [
+    ['email', 'email-to', 'email-body', ''],
+    ['sms', 'sms-number', 'sms-message', ''],
+    ['contact', 'contact-name', 'contact-note', 'More contact details'],
+    ['event', 'event-title', 'event-description', 'More event details'],
+    ['file', 'file-url', 'file-url', ''],
+  ]) {
+    assert(kind && first && large && more !== undefined);
+    const fixture = contentFixtures.find((value) => value.kind === kind);
+    assert(fixture);
+    await page.getByLabel('Content type', { exact: true }).selectOption(kind);
+    if (more) await page.getByText(more, { exact: true }).click();
+    for (const [id, value] of Object.entries(fixture.values))
+      await page.locator('#' + id).fill(value);
+    await page
+      .locator('#' + large)
+      .fill((kind === 'file' ? 'https://example.com/' : '') + 'x'.repeat(2100));
+    if (more) await page.getByText(more, { exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Create QR code', exact: true })
+      .click();
+    await expect(page.getByRole('status')).toContainText('too long');
+    await expect(page.locator('#' + large)).toBeFocused();
+    await expect(page.locator('#' + large)).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    await expect(page.locator('#content')).not.toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    await expect(
+      page.getByRole('button', { name: 'Download PNG', exact: true }),
+    ).toBeDisabled();
+    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await expect(page.getByLabel('Content type', { exact: true })).toHaveValue(
+      'text',
+    );
+  }
 });

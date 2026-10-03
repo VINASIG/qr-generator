@@ -1,11 +1,29 @@
 import {
   drawCanvas,
+  geometry,
+  InputError,
   makeMatrix,
   svgSource,
   validatePayload,
   wifiPayload,
 } from '../lib/qr';
-import type { ImageSize, WifiInput } from '../lib/qr';
+import type {
+  ErrorCorrection,
+  ImageSize,
+  QrOptions,
+  QuietZone,
+  WifiInput,
+} from '../lib/qr';
+import {
+  contactPayload,
+  emailPayload,
+  eventPayload,
+  httpLink,
+  localDateTimeToUtc,
+  locationPayload,
+  phonePayload,
+  smsPayload,
+} from '../lib/payloads';
 
 function element<T extends HTMLElement>(id: string, kind: { new (): T }): T {
   const node = document.getElementById(id);
@@ -14,14 +32,16 @@ function element<T extends HTMLElement>(id: string, kind: { new (): T }): T {
   return node;
 }
 const form = element('qr-form', HTMLFormElement);
+const kind = element('content-type', HTMLSelectElement);
 const content = element('content', HTMLTextAreaElement);
 const ssid = element('ssid', HTMLInputElement);
 const password = element('password', HTMLInputElement);
 const security = element('security', HTMLSelectElement);
 const hidden = element('hidden-network', HTMLInputElement);
 const show = element('show-password', HTMLInputElement);
-const wifiFields = element('wifi-fields', HTMLFieldSetElement);
-const textFields = element('text-fields', HTMLDivElement);
+const panels = [
+  ...form.querySelectorAll<HTMLFieldSetElement>('fieldset[data-content-type]'),
+];
 const passwordFields = element('password-fields', HTMLDivElement);
 const generate = element('generate', HTMLButtonElement);
 const clear = element('clear', HTMLButtonElement);
@@ -34,6 +54,17 @@ const previewPanel = element('preview-panel', HTMLElement);
 const empty = element('empty-preview', HTMLDivElement);
 const details = element('encoded-details', HTMLDetailsElement);
 const encoded = element('encoded-content', HTMLParagraphElement);
+const technical = element('technical-details', HTMLDetailsElement);
+const correction = element('error-correction', HTMLSelectElement);
+const border = element('quiet-zone', HTMLSelectElement);
+const version = element('qr-version', HTMLSelectElement);
+const mask = element('mask-pattern', HTMLSelectElement);
+const allDay = element('event-all-day', HTMLInputElement);
+const eventStart = element('event-start', HTMLInputElement);
+const eventEnd = element('event-end', HTMLInputElement);
+const eventStartTime = element('event-start-time', HTMLInputElement);
+const eventEndTime = element('event-end-time', HTMLInputElement);
+const timezone = element('event-timezone', HTMLParagraphElement);
 let revision = 0;
 let imageUrl = '';
 let png: Blob | null = null;
@@ -56,19 +87,21 @@ function invalidate(): void {
   details.hidden = true;
   details.open = false;
   encoded.textContent = '';
+  technical.hidden = true;
+  technical.open = false;
+  for (const fact of technical.querySelectorAll('dd[id]'))
+    fact.textContent = '';
   if (imageUrl) URL.revokeObjectURL(imageUrl);
   imageUrl = '';
-  for (const field of [content, ssid, password])
+  for (const field of form.querySelectorAll('[aria-invalid]'))
     field.removeAttribute('aria-invalid');
 }
 function updateFields(): void {
-  const wifi =
-    form.querySelector<HTMLInputElement>('input[name="kind"]:checked')
-      ?.value === 'wifi';
-  wifiFields.hidden = !wifi;
-  wifiFields.disabled = !wifi;
-  textFields.hidden = wifi;
-  content.disabled = wifi;
+  const wifi = kind.value === 'wifi';
+  for (const panel of panels) {
+    panel.hidden = panel.dataset['contentType'] !== kind.value;
+    panel.disabled = panel.hidden;
+  }
   const open = security.value === 'nopass';
   passwordFields.hidden = open;
   password.disabled = open || !wifi;
@@ -77,6 +110,15 @@ function updateFields(): void {
     show.checked = false;
   }
   password.type = show.checked ? 'text' : 'password';
+  for (const time of [eventStartTime, eventEndTime]) {
+    time.closest('.field')?.toggleAttribute('hidden', allDay.checked);
+    time.disabled = allDay.checked || kind.value !== 'event';
+  }
+  timezone.textContent = allDay.checked
+    ? 'Start date is the first day; End date is the last day included. Times are not included in an all-day event.'
+    : "Times use this device's timezone (" +
+      Intl.DateTimeFormat().resolvedOptions().timeZone +
+      ') and are encoded in UTC.';
 }
 function selectedSize(): ImageSize {
   const value = Number(size.value);
@@ -84,23 +126,99 @@ function selectedSize(): ImageSize {
     throw new Error('Choose a supported PNG size.');
   return value;
 }
+function value(id: string): string {
+  const field = document.getElementById(id);
+  if (!(
+    field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
+  ))
+    throw new Error('Missing content field ' + id);
+  return field.value;
+}
+function readOptions(): QrOptions {
+  const level = correction.value as ErrorCorrection;
+  const quietZone = Number(border.value) as QuietZone;
+  return {
+    errorCorrectionLevel: level,
+    quietZone,
+    ...(version.value !== 'auto' ? { version: Number(version.value) } : {}),
+    ...(mask.value !== 'auto' ? { maskPattern: Number(mask.value) } : {}),
+  };
+}
+function eventTime(date: HTMLInputElement, time: HTMLInputElement): string {
+  if (!date.value)
+    throw new InputError(date.id, 'Choose a date for this event.');
+  if (!time.value)
+    throw new InputError(time.id, 'Choose a time for this event.');
+  return localDateTimeToUtc(date.value + 'T' + time.value, time.id);
+}
 function readPayload(): string {
-  if (!wifiFields.hidden) {
-    if (
-      security.value !== 'WPA' &&
-      security.value !== 'WEP' &&
-      security.value !== 'nopass'
-    )
-      throw new Error('Choose a supported Wi-Fi security type.');
-    const input: WifiInput = {
-      ssid: ssid.value,
-      password: password.value,
-      security: security.value,
-      hidden: hidden.checked,
-    };
-    return wifiPayload(input);
+  switch (kind.value) {
+    case 'text':
+      return validatePayload(content.value);
+    case 'wifi': {
+      if (
+        security.value !== 'WPA' &&
+        security.value !== 'WEP' &&
+        security.value !== 'nopass'
+      )
+        throw new InputError(
+          'security',
+          'Choose a supported Wi-Fi security type.',
+        );
+      const input: WifiInput = {
+        ssid: ssid.value,
+        password: password.value,
+        security: security.value,
+        hidden: hidden.checked,
+      };
+      return wifiPayload(input);
+    }
+    case 'email':
+      return emailPayload({
+        address: value('email-to'),
+        subject: value('email-subject'),
+        body: value('email-body'),
+      });
+    case 'phone':
+      return phonePayload(value('phone-number'), value('phone-extension'));
+    case 'sms':
+      return smsPayload(value('sms-number'), value('sms-message'));
+    case 'contact':
+      return contactPayload({
+        name: value('contact-name'),
+        given: value('contact-given'),
+        family: value('contact-family'),
+        phone: value('contact-phone'),
+        email: value('contact-email'),
+        organization: value('contact-organization'),
+        website: value('contact-website'),
+        note: value('contact-note'),
+      });
+    case 'location':
+      return locationPayload(value('latitude'), value('longitude'));
+    case 'file':
+      return httpLink(value('file-url'));
+    case 'event':
+      if (!value('event-title').trim())
+        throw new InputError('event-title', 'Enter a title for this event.');
+      return eventPayload(
+        {
+          title: value('event-title'),
+          start: allDay.checked
+            ? eventStart.value
+            : eventTime(eventStart, eventStartTime),
+          end: allDay.checked
+            ? eventEnd.value
+            : eventTime(eventEnd, eventEndTime),
+          allDay: allDay.checked,
+          location: value('event-location'),
+          description: value('event-description'),
+        },
+        { uid: crypto.randomUUID(), stamp: new Date().toISOString() },
+      );
+    default:
+      throw new InputError('content-type', 'Choose a supported content type.');
   }
-  return validatePayload(content.value);
 }
 async function create(): Promise<void> {
   invalidate();
@@ -112,12 +230,14 @@ async function create(): Promise<void> {
   try {
     const payload = readPayload();
     const pixels = selectedSize();
+    const options = readOptions();
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => {
         resolve();
       }),
     );
-    const matrix = makeMatrix(payload);
+    if (ticket !== revision) return;
+    const matrix = makeMatrix(payload, options);
     const canvas = document.createElement('canvas');
     drawCanvas(canvas, matrix, pixels);
     const nextPng = await new Promise<Blob>((resolve, reject) => {
@@ -135,6 +255,24 @@ async function create(): Promise<void> {
     empty.hidden = true;
     details.hidden = false;
     encoded.textContent = payload;
+    technical.hidden = false;
+    const facts = {
+      'code-bytes': String(matrix.bytes) + ' UTF-8 bytes',
+      'code-version':
+        'Version ' +
+        String(matrix.version) +
+        ' / ' +
+        String(matrix.size) +
+        ' x ' +
+        String(matrix.size),
+      'code-correction': matrix.errorCorrectionLevel,
+      'code-mask': 'Pattern ' + String(matrix.maskPattern),
+      'code-border': String(matrix.quietZone) + ' modules minimum',
+      'code-scale':
+        String(geometry(matrix, pixels).scale) + ' pixels per module',
+    };
+    for (const [id, fact] of Object.entries(facts))
+      element(id, HTMLElement).textContent = fact;
     pngButton.disabled = false;
     svgButton.disabled = false;
     message('Your QR code is ready. Download PNG or SVG.', 'success');
@@ -144,14 +282,29 @@ async function create(): Promise<void> {
     }
   } catch (error) {
     if (ticket !== revision) return;
-    const field = wifiFields.hidden
-      ? content
-      : !ssid.value.trim() ||
-          (error instanceof Error && error.message.includes('network name'))
-        ? ssid
-        : password;
-    field.setAttribute('aria-invalid', 'true');
-    field.focus();
+    const candidate =
+      error instanceof InputError ? document.getElementById(error.field) : null;
+    const field =
+      candidate instanceof HTMLInputElement ||
+      candidate instanceof HTMLTextAreaElement ||
+      candidate instanceof HTMLSelectElement
+        ? !candidate.matches(':disabled')
+          ? candidate
+          : null
+        : null;
+    const target =
+      field ??
+      panels
+        .find((panel) => !panel.hidden)
+        ?.querySelector<HTMLElement>('input, textarea, select') ??
+      kind;
+    let disclosure = target.closest('details');
+    while (disclosure) {
+      disclosure.open = true;
+      disclosure = disclosure.parentElement?.closest('details') ?? null;
+    }
+    target.setAttribute('aria-invalid', 'true');
+    target.focus();
     message(
       error instanceof Error
         ? error.message
@@ -199,8 +352,12 @@ size.addEventListener('change', () => {
 });
 form.addEventListener('reset', () => {
   invalidate();
-  // Read the default radio values after the native reset action completes.
+  // Read defaults after the native reset action completes.
   window.setTimeout(() => {
+    size.value = '1024';
+    element('advanced-settings', HTMLDetailsElement).open = false;
+    element('contact-more', HTMLDetailsElement).open = false;
+    element('event-more', HTMLDetailsElement).open = false;
     updateFields();
     message('Your content stays in this browser.');
     content.focus();

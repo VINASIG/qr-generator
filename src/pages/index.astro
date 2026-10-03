@@ -1,5 +1,6 @@
 ---
 import { Download, QrCode } from '@lucide/astro';
+import ContentFields from '../components/ContentFields.astro';
 import '../styles/tokens.css';
 import '../styles/app.css';
 const configuredBase = import.meta.env.BASE_URL;
@@ -17,7 +18,7 @@ const asset = (name: string) => base + name;
     <title>VINASIG QR Generator - Static QR codes, no signup</title>
     <meta
       name="description"
-      content="Create static QR codes for links, text and Wi-Fi in your browser. Download PNG or SVG without an account, uploads or a tracking redirect."
+      content="Create static QR codes for links, Wi-Fi, email, SMS, contacts, locations and events. Choose error correction and download PNG or SVG. No account or redirect."
     />
     <meta name="theme-color" content="#f7f6f4" />
     <link rel="canonical" href="https://vinasig.github.io/qr-generator/" />
@@ -66,7 +67,7 @@ const asset = (name: string) => base + name;
         applicationCategory: 'UtilitiesApplication',
         operatingSystem: 'Web browser',
         description:
-          'Create static QR codes for links, text and Wi-Fi locally. Download PNG and SVG without an account.',
+          'Create static QR codes for links, text, Wi-Fi, email, phone, SMS, vCard contacts, locations and calendar events locally. Adjust error correction and download PNG or SVG without an account.',
       })}
     />
   </head>
@@ -100,22 +101,34 @@ const asset = (name: string) => base + name;
           <section class="editor" aria-labelledby="content-heading">
             <h2 id="content-heading">Create your code</h2>
             <form id="qr-form" novalidate>
-              <fieldset class="content-type">
-                <legend>Content type</legend>
-                <label>
-                  <input type="radio" name="kind" value="text" checked /> URL or
-                  text
-                </label>
-                <label>
-                  <input type="radio" name="kind" value="wifi" /> Wi-Fi
-                </label>
-              </fieldset>
-              <div id="text-fields" class="fields">
+              <div class="field content-type">
+                <label for="content-type">Content type</label>
+                <select id="content-type">
+                  <option value="text" selected>
+                    URL or text
+                  </option>
+                  <option value="wifi">Wi-Fi</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Phone call</option>
+                  <option value="sms">SMS</option>
+                  <option value="contact">Contact</option>
+                  <option value="location">Location</option>
+                  <option value="event">Calendar</option>
+                  <option value="file">File link</option>
+                </select>
+              </div>
+              <fieldset
+                id="text-fields"
+                class="fields"
+                data-content-type="text"
+              >
+                <legend class="visually-hidden">URL or text details</legend>
                 <label for="content">Link or text</label>
                 <textarea
                   id="content"
                   rows="4"
-                  placeholder="https://example.com"
+                  placeholder="e.g. https://example.com"
+                  required
                   spellcheck="false"
                   autocomplete="off"
                   aria-describedby="content-help form-status"
@@ -124,20 +137,27 @@ const asset = (name: string) => base + name;
                   Paste the complete link, or enter any text. We keep it exactly
                   as entered.
                 </p>
-              </div>
-              <fieldset id="wifi-fields" class="fields" hidden disabled>
+              </fieldset>
+              <fieldset
+                id="wifi-fields"
+                class="fields"
+                data-content-type="wifi"
+                hidden
+                disabled
+              >
                 <legend class="visually-hidden">Wi-Fi details</legend>
                 <label for="ssid">Network name</label>
                 <input
                   id="ssid"
                   type="text"
                   autocomplete="off"
+                  required
                   spellcheck="false"
                   aria-describedby="form-status"
                 />
                 <label for="security">Security</label>
                 <select id="security">
-                  <option value="WPA">WPA or WPA2 personal</option>
+                  <option value="WPA">WPA / WPA2</option>
                   <option value="WEP">WEP</option>
                   <option value="nopass">Open network</option>
                 </select>
@@ -158,10 +178,85 @@ const asset = (name: string) => base + name;
                   <input id="hidden-network" type="checkbox" /> Hidden network
                 </label>
                 <p id="wifi-help" class="supporting">
-                  Anyone with this code can read its Wi-Fi details. Keep the
-                  downloaded image private when needed.
+                  WPA / WPA2 is for personal networks. Anyone with this code can
+                  read its Wi-Fi details. Keep the downloaded image private when
+                  needed.
                 </p>
               </fieldset>
+              <ContentFields />
+              <details id="advanced-settings" class="advanced-settings">
+                <summary>Advanced settings</summary>
+                <div class="advanced-controls">
+                  <div class="field">
+                    <label for="error-correction">Error correction</label>
+                    <select
+                      id="error-correction"
+                      aria-describedby="correction-help form-status"
+                    >
+                      <option value="L">L (7%)</option>
+                      <option value="M" selected>
+                        M (15%)
+                      </option>
+                      <option value="Q">Q (25%)</option>
+                      <option value="H">H (30%)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="quiet-zone">White border</label>
+                    <select id="quiet-zone" aria-describedby="form-status">
+                      <option value="4" selected>
+                        4 modules
+                      </option>
+                      <option value="8">8 modules</option>
+                      <option value="12">12 modules</option>
+                    </select>
+                  </div>
+                </div>
+                <p id="correction-help" class="supporting">
+                  M is the default for everyday use. Q or H adds recovery for
+                  dirt or damage, but can make the pattern denser. Approximate
+                  recovery rates refer to codewords, not an area you can cover.
+                  Keep the white border of at least four modules and test your
+                  print.
+                </p>
+                <div class="advanced-controls">
+                  <div class="field">
+                    <label for="qr-version">QR version</label>
+                    <select
+                      id="qr-version"
+                      aria-describedby="structure-help form-status"
+                    >
+                      <option value="auto" selected>
+                        Auto
+                      </option>
+                      {Array.from({ length: 40 }, (_, i) => (
+                        <option value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="mask-pattern">Mask pattern</label>
+                    <select
+                      id="mask-pattern"
+                      aria-describedby="structure-help form-status"
+                    >
+                      <option value="auto" selected>
+                        Auto
+                      </option>
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <option value={i}>{i}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p id="structure-help" class="supporting">
+                  Leave version and mask on Auto unless a specification requires
+                  them. Auto selects the smallest version that fits. Versions
+                  1-40 control the module grid; masks 0-7 change its pattern,
+                  not its content. Content is limited to 2,000 UTF-8 bytes, and
+                  must also fit the selected version and correction level.
+                </p>
+              </details>
               <div class="form-actions">
                 <button id="generate" class="primary" type="submit" disabled>
                   Create QR code
@@ -239,12 +334,84 @@ const asset = (name: string) => base + name;
               <summary>Encoded content</summary>
               <p id="encoded-content"></p>
             </details>
+            <details id="technical-details" hidden>
+              <summary>Technical details</summary>
+              <dl class="code-facts">
+                <div>
+                  <dt>Format</dt>
+                  <dd>QR Code Model 2</dd>
+                </div>
+                <div>
+                  <dt>Content</dt>
+                  <dd id="code-bytes"></dd>
+                </div>
+                <div>
+                  <dt>Version / grid</dt>
+                  <dd id="code-version"></dd>
+                </div>
+                <div>
+                  <dt>Error correction</dt>
+                  <dd id="code-correction"></dd>
+                </div>
+                <div>
+                  <dt>Mask</dt>
+                  <dd id="code-mask"></dd>
+                </div>
+                <div>
+                  <dt>White border</dt>
+                  <dd id="code-border"></dd>
+                </div>
+                <div>
+                  <dt>PNG modules</dt>
+                  <dd id="code-scale"></dd>
+                </div>
+              </dl>
+            </details>
           </section>
         </div>
         <section class="notes" aria-labelledby="notes-heading">
           <h2 id="notes-heading" class="visually-hidden">
             About your QR code
           </h2>
+          <details>
+            <summary>Which content type should I choose?</summary>
+            <p>
+              URL or text keeps what you enter unchanged. Wi-Fi prepares network
+              details; email, phone and SMS prepare an action in a compatible
+              app. Contact creates a vCard, Location uses coordinates, and
+              Calendar event creates an iCalendar event. Reader support varies,
+              so test the action on the devices you expect to use.
+            </p>
+          </details>
+          <details>
+            <summary>Can a QR code contain an image or PDF?</summary>
+            <p>
+              Choose File link for an image, PDF or other file's direct web
+              address. The file needs to be hosted elsewhere and accessible to
+              the people scanning it. A traditional QR code has limited data
+              capacity; this tool does not embed the file, upload it or add a
+              redirect service.
+            </p>
+          </details>
+          <details>
+            <summary>What do error correction, version and mask mean?</summary>
+            <p>
+              L, M, Q and H offer increasing data recovery with less room for
+              content at the same version. A version is the grid size, from 21 x
+              21 modules at version 1 to 177 x 177 at version 40. The mask
+              balances dark and light patterns. Auto chooses a fitting version
+              and a mask; the white border always keeps at least four modules.
+              See{' '}
+              <a href="https://www.qrcode.com/en/about/error_correction.html">
+                DENSO WAVE's correction guide
+              </a>
+              and{' '}
+              <a href="https://www.qrcode.com/en/about/version.html">
+                version guide
+              </a>
+              .
+            </p>
+          </details>
           <details>
             <summary>Will my QR code expire?</summary>
             <p>
