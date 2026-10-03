@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://vinasig.github.io',
-  base: '/qr-generator',
+  site: 'https://qr.vinasig.io.vn',
+  base: '/',
   output: 'static',
   build: { format: 'directory', inlineStylesheets: 'never' },
 });

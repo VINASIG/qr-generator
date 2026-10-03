@@ -26,7 +26,7 @@ assert(
     2,
   ),
 );
-const canonical = 'https://vinasig.github.io/qr-generator/';
+const canonical = 'https://qr.vinasig.io.vn/';
 assert(html.includes('href="' + canonical + '"'));
 assert(html.includes('application/ld+json') && html.includes('WebApplication'));
 assert(

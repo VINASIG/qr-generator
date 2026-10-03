@@ -618,7 +618,7 @@ test('public metadata, local assets and HTML content are available', async ({
   );
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://vinasig.github.io/qr-generator/',
+    'https://qr.vinasig.io.vn/',
   );
   const metadata: unknown = JSON.parse(
     (await page.locator('script[type="application/ld+json"]').textContent()) ??

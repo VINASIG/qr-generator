@@ -10,6 +10,10 @@ This static Astro and TypeScript project creates traditional QR codes locally. R
 - Source quality gates must remain strict. Tests independently decode generated PNG and SVG, verify exact payloads, quiet zones, stale-output invalidation, privacy, errors, keyboard, touch and responsive states. Never weaken an assertion or budget to pass.
 - Store screenshots, traces, research captures and runtime tooling in ignored output/. Record durable decisions and measured limits under docs/audits/. A fresh Codex skill discovery, independent SI-agent trial, physical-phone scan and field metrics must be reported NOT_RUN unless actually performed.
 - Respect existing user work and current authorization. Read LICENSES.md and BRAND_POLICY.md for the current grant and exclusions. Keep external notices. Commit and publish only within the current task authorization.
+## Canonical domain
+
+The owner authorized the custom-domain migration on 4 October 2026. Publish this site at https://qr.vinasig.io.vn/ with an origin-root base. Preserve that domain in canonical/social metadata, sitemap, robots, package homepage, preview and browser assertions. Keep GitHub repository/source links intact. Read docs/DOMAIN.md. GitHub Actions deploys through the repository Pages custom-domain setting; a CNAME file alone does not configure an Actions deployment.
+
 <!-- VINASIG STANDARDS BEGIN -->
 ## VINASIG SI agent standards 0.1.0
 

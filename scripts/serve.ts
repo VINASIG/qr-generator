@@ -24,7 +24,7 @@ export async function startServer(root = path.resolve('dist'), port = 0) {
       try {
         const url = new URL(request.url ?? '/', 'http://localhost');
         const pathname = decodeURIComponent(url.pathname);
-        const relative = pathname.replace(/^\/qr-generator(?:\/|$)/, '/');
+        const relative = pathname;
         const filename = path.resolve(root, `.${relative}`);
         if (filename !== root && !filename.startsWith(`${root}${path.sep}`))
           throw new Error('Invalid path');
@@ -52,7 +52,7 @@ export async function startServer(root = path.resolve('dist'), port = 0) {
   if (!address || typeof address === 'string')
     throw new Error('Missing server port');
   return {
-    url: `http://127.0.0.1:${String(address.port)}/qr-generator/`,
+    url: `http://127.0.0.1:${String(address.port)}/`,
     close: () =>
       new Promise<void>((resolve, reject) => {
         server.close((error) => {

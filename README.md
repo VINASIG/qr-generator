@@ -2,7 +2,7 @@
 
 Create traditional static QR codes for links, text, Wi-Fi, email, phone calls, SMS, contacts, locations and calendar events. Generation happens in the browser, and the output contains the supplied content directly.
 
-The intended public website is [VINASIG QR Generator](https://vinasig.github.io/qr-generator/). The source is maintained at [VINASIG/qr-generator](https://github.com/VINASIG/qr-generator). Publication results are verified for an exact commit and recorded separately from this source description.
+The intended public website is [VINASIG QR Generator](https://qr.vinasig.io.vn/). The source is maintained at [VINASIG/qr-generator](https://github.com/VINASIG/qr-generator). Publication results are verified for an exact commit and recorded separately from this source description.
 
 ## A focused tool
 
@@ -28,7 +28,7 @@ npx --yes npm@12.2.0 ci
 npx --yes npm@12.2.0 run dev
 ```
 
-Read the URL from the dev-server log. The site uses the project base path `/qr-generator/`.
+Read the URL from the dev-server log. The site uses the origin-root base path `/`.
 
 ```sh
 npm run check
@@ -55,6 +55,10 @@ The interface uses English, local Space Grotesk and VINASIG's adopted design tok
 Screen-based decoder tests do not replace a scan from the final physical print. Test the final size, contrast and viewing distance on the devices your audience uses.
 
 Content formats are interpreted by the scanner and destination app. An SMS reader may open only the recipient; calendar and contact actions also vary. These outputs do not automatically send messages, call numbers or import events. Check the final action on the intended devices.
+
+## Canonical domain
+
+The public site uses [qr.vinasig.io.vn](https://qr.vinasig.io.vn/) at the origin root. GitHub Pages remains the deployment service. [Domain maintenance](docs/DOMAIN.md) records DNS, HTTPS, search submission and verification boundaries.
 
 ## License scopes
 
