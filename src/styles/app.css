@@ -77,13 +77,17 @@ button:disabled {
 }
 
 .brand {
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm);
-  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: 100%;
+  min-height: 44px;
 }
 
+.brand picture,
 .brand img {
   display: block;
+  width: 132px;
   max-width: 100%;
   height: auto;
 }

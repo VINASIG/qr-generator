@@ -1,7 +1,10 @@
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import { startServer } from '../../scripts/serve.ts';
-import { inspectInterface } from '../../.vinasig/standards/templates/web/interface.mjs';
+import {
+  inspectInterface,
+  inspectHeaderBrand,
+} from '../../.vinasig/standards/templates/web/interface.mjs';
 import { captureFullPage } from '../../.vinasig/standards/templates/web/responsive.mjs';
 let app: Awaited<ReturnType<typeof startServer>>;
 test.beforeAll(async () => {
@@ -35,6 +38,13 @@ for (const route of [''])
           });
           await page.goto(new URL(route, app.url).href);
           await captureFullPage(page, info, 'initial');
+          expect(await page.evaluate(inspectHeaderBrand)).toEqual([]);
+          const brand = page.locator('[data-brand-logo]');
+          await brand.focus();
+          await expect(brand).toBeFocused();
+          expect(await page.evaluate(inspectHeaderBrand)).toEqual([]);
+          await brand.hover();
+          expect(await page.evaluate(inspectHeaderBrand)).toEqual([]);
           expect(await page.evaluate(inspectInterface)).toEqual([]);
           for (const disclosure of await page.locator('details').all()) {
             if (

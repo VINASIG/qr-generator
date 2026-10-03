@@ -38,7 +38,8 @@ const manifest = record(
   parseJson(await readLocal(repositoryRoot, 'docs/asset-manifest.json')),
 );
 const assets = Object.entries(record(manifest['files']));
-assert.equal(assets.length, 8);
+// Add only the reviewed Reversed export. Every existing digest stays fixed.
+assert.equal(assets.length, 9);
 for (const [file, expected] of assets) {
   assert(file.startsWith('public/'));
   const bytes = await readLocal(repositoryRoot, file);

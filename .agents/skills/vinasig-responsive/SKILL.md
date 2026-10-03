@@ -11,6 +11,8 @@ Measure the five required viewports, 320 px reflow, actual breakpoint neighbors 
 
 Apply WEB-008 to the full dropdown, calendar, color chooser and slider. A styled closed field with an operating-system popup fails the control requirement. Apply LANG-004 and LANG-005 to initial and dynamic copy in every locale. Run the interface inspector on real states, then inspect the writing and screenshots. Preserve required syntax and user data with narrowly scoped semantic annotations.
 
+Apply WEB-001 to the header logo. Verify the original asset digest and inspect the actual surface, transparent link/image presentation, matching light/dark export, aspect ratio, accessible name and 44 px target. Use `inspectHeaderBrand` alongside the rendered-interface inspector, then open screenshots. The operating-system preference alone does not determine the correct variant. Check the initial HTML, keyboard focus and narrow layouts.
+
 Fix the source cause and shared components. Do not clip page overflow, transform-scale the page, hide content, or weaken an assertion. Repeat the same affected matrix after each group of fixes. Add role/name based regression checks using the local web templates where they fit. Run axe plus manual focus, keyboard, contrast/reflow checks. Axe alone is partial coverage.
 
 Output route/viewport/engine/state results, before/after evidence and tests, unrun device/assistive checks and concrete blockers. Chromium emulation never establishes real iPhone/Safari behavior. Review screenshot baselines before approving them.

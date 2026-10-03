@@ -74,6 +74,7 @@ export function inspectInterface() {
     const text = raw.replace(/\s+/g, ' ').trim();
     if (!text) return;
     if (text.includes(';')) add(element, text, 'semicolon');
+    if (text.includes('•')) add(element, text, 'round-bullet');
     if (/[–—]/.test(text)) add(element, text, 'long-dash');
     if (/\s\/\s/.test(text)) add(element, text, 'slash-separator');
     if (/:\s/.test(text)) add(element, text, 'label-colon');
@@ -142,6 +143,157 @@ export function inspectInterface() {
   for (const element of document.querySelectorAll('input[type="range"]')) {
     if (visible(element) && getComputedStyle(element).appearance !== 'none')
       add(element, 'range', 'platform-slider');
+  }
+  return findings;
+}
+
+/** Inspect the explicit VINASIG header logo after its image has loaded.
+ * The consumer must separately pin and verify the original asset bytes.
+ * This checks presentation, variant selection and geometry, not artwork rights.
+ * @returns {{kind: string, text: string, element: string}[]} */
+export function inspectHeaderBrand() {
+  /** @type {{kind: string, text: string, element: string}[]} */
+  const findings = [];
+  const links = [...document.querySelectorAll('[data-brand-logo]')];
+  /** @param {Element} element @param {string} kind @param {string} text */
+  const add = (element, kind, text) =>
+    findings.push({
+      kind,
+      text,
+      element: element.id ? `#${element.id}` : element.tagName.toLowerCase(),
+    });
+  if (links.length !== 1) {
+    findings.push({
+      kind: 'header-logo-count',
+      text: String(links.length),
+      element: '[data-brand-logo]',
+    });
+    return findings;
+  }
+  const link = links[0];
+  if (!link) return findings;
+  if (!(link instanceof HTMLAnchorElement) || !link.href)
+    add(link, 'header-logo-link', 'Use a named logo link');
+  const image = link.querySelector('img');
+  if (!image || !image.complete || image.naturalWidth === 0) {
+    add(link, 'header-logo-image', 'The supplied image must load');
+    return findings;
+  }
+  if (!image.alt.trim())
+    add(image, 'header-logo-name', 'The logo needs alternative text');
+  for (const element of [link, ...link.querySelectorAll('picture,img')]) {
+    const style = getComputedStyle(element);
+    const rgba = style.backgroundColor.match(/[\d.]+/g)?.map(Number) ?? [];
+    if (rgba.length === 3 || (rgba[3] ?? 0) > 0)
+      add(element, 'header-logo-background', style.backgroundColor);
+    if (
+      style.backgroundImage !== 'none' ||
+      style.boxShadow !== 'none' ||
+      style.filter !== 'none' ||
+      Number(style.opacity) !== 1
+    )
+      add(
+        element,
+        'header-logo-effect',
+        'Keep the original artwork without panel effects',
+      );
+    if (
+      [
+        style.paddingTop,
+        style.paddingRight,
+        style.paddingBottom,
+        style.paddingLeft,
+        style.borderTopWidth,
+        style.borderRightWidth,
+        style.borderBottomWidth,
+        style.borderLeftWidth,
+      ].some((value) => parseFloat(value) > 0.5)
+    )
+      add(
+        element,
+        'header-logo-frame',
+        'Use surrounding layout spacing without a padded logo card',
+      );
+    if (
+      element === image &&
+      [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomLeftRadius,
+        style.borderBottomRightRadius,
+      ].some((value) => parseFloat(value) > 0)
+    )
+      add(element, 'header-logo-crop', 'Keep the complete unrounded artwork');
+  }
+  const target = link.getBoundingClientRect();
+  if (target.width < 44 || target.height < 44)
+    add(link, 'header-logo-target', `${target.width} x ${target.height}`);
+  const bounds = image.getBoundingClientRect();
+  // The supported original horizontal exports share this reviewed viewBox.
+  // Their percentage dimensions produce rounded naturalWidth/naturalHeight
+  // values that differ between engines. Do not infer the artwork ratio from
+  // that raster fallback or request an asset during a user's local workflow.
+  const ratio = 540 / 140;
+  const declaredWidth = Number(image.getAttribute('width'));
+  const declaredHeight = Number(image.getAttribute('height'));
+  if (
+    declaredWidth <= 0 ||
+    declaredHeight <= 0 ||
+    Math.abs(declaredWidth / declaredHeight - ratio) > 0.0001
+  )
+    add(
+      image,
+      'header-logo-intrinsic-ratio',
+      'Declare the original aspect ratio',
+    );
+  if (
+    bounds.height <= 0 ||
+    Math.abs(bounds.width / bounds.height - ratio) > 0.02
+  )
+    add(image, 'header-logo-ratio', 'Preserve the original image aspect ratio');
+  /** @type {number | undefined} */
+  let luminance;
+  for (
+    let surface = link.parentElement;
+    surface;
+    surface = surface.parentElement
+  ) {
+    const style = getComputedStyle(surface);
+    const rgba = style.backgroundColor.match(/[\d.]+/g)?.map(Number) ?? [];
+    if (
+      !style.backgroundColor.startsWith('rgb') ||
+      rgba.length < 3 ||
+      (rgba[3] ?? 1) < 0.99
+    )
+      continue;
+    const linear = rgba.slice(0, 3).map((value) => {
+      const channel = value / 255;
+      return channel <= 0.04045
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    luminance =
+      (linear[0] ?? 0) * 0.2126 +
+      (linear[1] ?? 0) * 0.7152 +
+      (linear[2] ?? 0) * 0.0722;
+    break;
+  }
+  if (luminance === undefined)
+    add(link, 'header-logo-surface', 'Inspect the actual logo surface');
+  else {
+    const filename = new URL(image.currentSrc || image.src).pathname
+      .split('/')
+      .pop();
+    const supported =
+      luminance < 0.179
+        ? ['reversed.svg', 'monochrome-white.svg']
+        : ['primary-color.svg', 'color-black.svg', 'monochrome-black.svg'];
+    if (!filename || !supported.includes(filename))
+      add(
+        image,
+        'header-logo-variant',
+        `${filename ?? 'unknown'} on ${luminance < 0.179 ? 'dark' : 'light'} surface`,
+      );
   }
   return findings;
 }

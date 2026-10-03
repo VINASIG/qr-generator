@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "source": {
     "repository": "VINASIG/agent-standards",
-    "ref": "sha256:317117a7042be27ca08cc3d6e116b1f58b89aa5d11d0272df3591f1a723fcf4b",
+    "ref": "sha256:ba570727e4ead391b73a3723c267a9923aa289a574900be28b2da8ee81f0cfae",
     "kind": "local-content-snapshot"
   },
   "files": {
@@ -23,7 +23,7 @@
     ".vinasig/standards/policies/performance.md": "f06b9f15c1b88d07cecf4bb08160fe550ae0cca4b5c6391488488391ea47d962",
     ".vinasig/standards/policies/quality.md": "195f59dd6429e2ed4edaa25ec3e540bab403c00582e094d0ec05f99d2ceda4a3",
     ".vinasig/standards/policies/search.md": "e36850b004e0afbd2c36c038246bf99ebcb5081759d84137922b84d63d7a536d",
-    ".vinasig/standards/policies/web.md": "8891bb9bdba7a3fccd8ea09279c12c125456777da2d092e9a19183919a664857",
+    ".vinasig/standards/policies/web.md": "19ab132dd7f920be0396e84b4cb8add7942f5bb72131aa6adb2ff33e609211df",
     ".vinasig/standards/profiles/core.md": "443526edd19e31a0a674863d67dead6a70c1ea6a7e26d209cf14b110a92a62da",
     ".vinasig/standards/profiles/web-typescript.md": "530b020c4278edeca3f294cfc21a243f723e1ab40ad2a24a586f212a28363d22",
     ".vinasig/standards/schemas/bundle.schema.json": "00040b346772fc6b9c10c4cc386e7171e145e4f48ede389aaa649961fd9cac87",
@@ -36,18 +36,18 @@
     ".agents/skills/vinasig-dependencies/SKILL.md": "ff26084bea30cb21c29814407c2c2a62adb44a7c768b1c272a81fb3c19b4af08",
     ".agents/skills/vinasig-motion/SKILL.md": "270ecc3e984655542145939253a41c89f657dd7a0a9fda64e8a14cb398f5e91b",
     ".agents/skills/vinasig-performance/SKILL.md": "eef1373399367c4a7059521a3ed8ffbe95b94e4ba26c9697c148e2982bef4edc",
-    ".agents/skills/vinasig-responsive/SKILL.md": "73d7036fef9ae2e4ab9ae19f845300561742f6428245ff669296402a2d19474e",
+    ".agents/skills/vinasig-responsive/SKILL.md": "55145d41a850ab8c7e5d299fe80397c5dce25e3bf63fb48a6c687c2e22f9b957",
     ".agents/skills/vinasig-search/SKILL.md": "38a0026c24ac171f695d30e58466f660e936c7272cec1b4dad108da1111adcb2",
     ".agents/skills/vinasig-workflow/SKILL.md": "ef812919efb1f3caeff3f268d3208927d984997f71c4d482e1df7b4aebaa8586",
-    ".vinasig/standards/standards.json": "898bbba71f7d0c1613a80a5f849991defdb57bbcf1dd74e187e13eecb9a8d237",
+    ".vinasig/standards/standards.json": "2eae032bae9ecc31cfa0993db5e08d11196b6f3f8a9845284ebbd3991373fdaa",
     ".vinasig/standards/templates/exception.json": "ecf34e10bd0c1be5ae82b3aa1db732b5d4dfd50f328249e18c5ae2ff901f1bff",
     ".vinasig/standards/templates/report.json": "73e785fd7022b452d6b751d1b2a33b6e6ff680ef588388888081fb278304d70a",
-    ".vinasig/standards/templates/web/interface.mjs": "e9bba5cc10088bc148429129595c72d687a5b40bc69d64db86d7c101e0bc7d3d",
+    ".vinasig/standards/templates/web/interface.mjs": "0352be6d1eecf226637a1adaa15a0a904eb9ada5b61ba78d891a6b06d249255f",
     ".vinasig/standards/templates/web/responsive.mjs": "2c16dcdc5de65111dbbe917dcf5588e5cc4e9dcb9b433256e14aac007c2655ef",
     ".vinasig/standards/tools.lock.json": "ed5f942785191c59f833dcd242844b86e7f2ec6c908b146ff0eb01f08b575433"
   },
   "profile": "web-typescript",
-  "bundleSha256": "bb555aad2e5c66da8ba2cdd5530446ca95c1235bb28706cb82066222adcb61f1",
-  "agentBlock": "3fac146b5e4e53d5c0fdc2f58a3a466201f90c856c076e74472a5f40b551bf63",
+  "bundleSha256": "bd59e07ba80969e9e5b6788a9438e81ba14a6e22ce121e6ef192ef89f54cd07f",
+  "agentBlock": "b8eedfabe4bffb8c4a76be19f9d328b302d20f6f3dda20ce4c9401fd0555d764",
   "agentsCreated": false
 }

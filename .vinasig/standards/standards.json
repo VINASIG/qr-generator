@@ -151,9 +151,9 @@
       "id": "WEB-001",
       "scope": "web",
       "level": "MUST",
-      "summary": "Source design and brand; settled font/icon roles",
+      "summary": "Source design and transparent header artwork; settled font/icon roles",
       "verification": ["automatic", "agent", "human"],
-      "evidence": "Routes, viewports, screenshots, roles, keyboard and design adoption record",
+      "evidence": "Original asset digests, actual header surfaces and variants, transparent presentation, target geometry, screenshots and adoption record",
       "exceptions": "Record approved product exceptions; unavailable applicable checks are NOT_RUN; distinguish emulation."
     },
     {

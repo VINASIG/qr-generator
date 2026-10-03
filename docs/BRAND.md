@@ -12,3 +12,9 @@ This product explicitly adopts the design system's Bright Playful Minimalism pro
 - Lucide supplies the QR placeholder and download icons. Simple Icons would supply third-party company marks if needed. This product needs none.
 
 Generated QR files contain the user's data and geometry only. They do not contain VINASIG artwork, names or tracking links. Public visibility does not grant a license for VINASIG artwork.
+
+## Transparent header approved on 4 October 2026
+
+Use the unchanged Primary Color lockup on the light canvas and the unchanged Reversed lockup on the dark canvas. A native picture source selects the existing dark variant without JavaScript. The logo link has no white panel, padded card, rounded artwork, shadow or filter. Its minimum hit height is 44 px, while the image retains the original 540 by 140 aspect ratio.
+
+The newly copied Reversed SVG was reviewed at VINASIG/vinasig-brand-assets commit `83ed7515c81c3b2a28888a75c754e44562d5b107`. Its SHA-256 is `98ceaaace06835138856d3710b4fed38714528573f78b19e710db796aea53d07`. The manifest records this separate review and preserves every earlier asset digest. Existing design/font adoption pins remain historical records of those unchanged files. Generated user output and printable document surfaces keep their intended styling.
