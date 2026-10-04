@@ -1,5 +1,9 @@
 # Verification
 
+## Calendar internal spacing regression
+
+`tests/browser/calendar-spacing.spec.ts` measures all four internal gutters separately from the popup's viewport bounds. Calendar rows, day buttons and the final scrolled footer must remain at least 16 CSS px inside the surface. Both start and end calendars check selection and focus in the first and last columns, 44 px day heights, readable day text, Escape and restored focus across 14 widths, 100%/200% text, both languages/themes and Chromium/Firefox/WebKit. Open top and bottom screenshots alongside the geometry results.
+
 Use the pinned Node/npm runtime. Run source checks, unit tests and the production build first, then browser and lab checks. CI requires Chromium, Firefox and WebKit on Windows and Linux. Local omissions must be named and cannot be set in CI.
 
 Unit tests independently decode module pixels with jsQR and check exact links, whitespace, Unicode, capacity, Wi-Fi escaping/quoting, quiet zones and safe self-contained SVG. Browser tests decode downloaded PNGs with the same independent decoder and decode the browser-rendered vector preview. They verify input edits and size changes disable stale exports, errors recover, clear removes data, and no cookies/storage/payload requests are added.

@@ -10,6 +10,7 @@ This static Astro and TypeScript project creates traditional QR codes locally. R
 - Source quality gates must remain strict. Tests independently decode generated PNG and SVG, verify exact payloads, quiet zones, stale-output invalidation, privacy, errors, keyboard, touch and responsive states. Never weaken an assertion or budget to pass.
 - Store screenshots, traces, research captures and runtime tooling in ignored output/. Record durable decisions and measured limits under docs/audits/. A fresh Codex skill discovery, independent SI-agent trial, physical-phone scan and field metrics must be reported NOT_RUN unless actually performed.
 - Respect existing user work and current authorization. Read LICENSES.md and BRAND_POLICY.md for the current grant and exclusions. Keep external notices. Commit and publish only within the current task authorization.
+- Calendar content needs at least 16 CSS px of internal padding on every side, using the adopted spacing tokens. Measure actual content and first/last-column day buttons against the inner border, including selected and focused states. Scroll to the last content and check its bottom inset. Keep these checks at 320 px, 200% text, both locales/themes and all supported engines. Viewport containment alone does not establish a safe internal gutter.
 
 ## Canonical domain
 

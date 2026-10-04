@@ -18,10 +18,13 @@
 }
 
 .date-dialog {
-  width: min(25rem, calc(100vw - 8px));
+  width: min(25rem, calc(100vw - 2px));
   max-width: none;
-  max-height: calc(100dvh - 8px);
-  padding: 0;
+  max-height: calc(100dvh - 32px);
+  inset-inline-start: 50vw;
+  margin-inline: 0;
+  transform: translateX(-50%);
+  padding: clamp(16px, 3vw, var(--space-6));
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -41,13 +44,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.75rem 0.5rem;
+  gap: var(--space-2);
+  padding: 0;
+  margin-block-end: var(--space-4);
 }
 
 .date-title-row h2 {
   font-size: var(--font-size-body);
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .date-month-row p {
@@ -75,6 +81,7 @@
 .date-grid th {
   height: 2.5rem;
   font-size: 0.75rem;
+  overflow-wrap: anywhere;
 }
 
 .date-grid abbr {
@@ -82,10 +89,10 @@
 }
 
 .date-day {
-  width: calc(100% - 4px);
+  width: 100%;
   min-height: 44px;
   padding: 0.3em 0;
-  margin-inline: 2px;
+  margin-inline: 0;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
@@ -113,4 +120,5 @@
 
 .date-footer {
   flex-wrap: wrap;
+  margin-block: var(--space-4) 0;
 }
