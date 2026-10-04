@@ -147,6 +147,262 @@ export function inspectInterface() {
   return findings;
 }
 
+/** Inspect full control surfaces, including native subparts and popup scrollbars.
+ * This is a structural gate. Open screenshots and exercise real controls too.
+ * @returns {{kind: string, text: string, element: string}[]} */
+export function inspectControlSurfaces() {
+  /** @type {{kind: string, text: string, element: string}[]} */
+  const findings = [];
+  const forced = matchMedia('(forced-colors: active)').matches;
+  /** @param {Element} element */
+  function visible(element) {
+    const style = getComputedStyle(element);
+    const box = element.getBoundingClientRect();
+    if (
+      style.display === 'none' ||
+      style.visibility !== 'visible' ||
+      Number(style.opacity) === 0 ||
+      box.width <= 1 ||
+      box.height <= 1
+    )
+      return false;
+    for (
+      let parent = element.parentElement;
+      parent;
+      parent = parent.parentElement
+    ) {
+      if (
+        parent instanceof HTMLDetailsElement &&
+        !parent.open &&
+        !parent.querySelector('summary')?.contains(element)
+      )
+        return false;
+      const ancestorStyle = getComputedStyle(parent);
+      if (
+        ancestorStyle.display === 'none' ||
+        ancestorStyle.visibility !== 'visible' ||
+        Number(ancestorStyle.opacity) === 0
+      )
+        return false;
+    }
+    return true;
+  }
+  /** @param {Element} element @param {string} kind @param {string} text */
+  const add = (element, kind, text) =>
+    findings.push({
+      kind,
+      text,
+      element: element.id ? `#${element.id}` : element.tagName.toLowerCase(),
+    });
+  /** @type {CSSStyleRule[]} */
+  const rules = [];
+  /** @param {CSSRuleList} list */
+  function collect(list) {
+    for (const rule of list) {
+      if (rule instanceof CSSStyleRule) rules.push(rule);
+      else if (rule instanceof CSSMediaRule) {
+        if (matchMedia(rule.conditionText).matches) collect(rule.cssRules);
+      } else if (rule instanceof CSSSupportsRule) {
+        if (CSS.supports(rule.conditionText)) collect(rule.cssRules);
+      } else if ('cssRules' in rule)
+        collect(/** @type {CSSGroupingRule} */ (rule).cssRules);
+      else if (rule instanceof CSSImportRule && rule.styleSheet)
+        collect(rule.styleSheet.cssRules);
+    }
+  }
+  for (const sheet of [
+    ...document.styleSheets,
+    ...document.adoptedStyleSheets,
+  ]) {
+    try {
+      collect(sheet.cssRules);
+    } catch {
+      add(
+        document.documentElement,
+        'control-styles-unreadable',
+        'Cannot inspect a control stylesheet',
+      );
+    }
+  }
+  /** @param {Element} element @param {string} pseudo */
+  function authoredPart(element, pseudo) {
+    return rules.some(
+      (rule) =>
+        rule.selectorText.split(',').some((selector) => {
+          const index = selector.indexOf(pseudo);
+          if (index < 0) return false;
+          try {
+            return element.matches(selector.slice(0, index).trim() || '*');
+          } catch {
+            return false;
+          }
+        }) &&
+        (rule.style.getPropertyValue('background') ||
+          rule.style.getPropertyValue('background-color')),
+    );
+  }
+  for (const element of document.querySelectorAll(
+    'input[type="checkbox"],input[type="radio"],input[type="range"],input[type="search"],progress,meter',
+  )) {
+    if (!visible(element) || forced) continue;
+    const style = getComputedStyle(element);
+    if (style.appearance !== 'none')
+      add(
+        element,
+        'control-native-surface',
+        'Control still uses a platform appearance',
+      );
+    if (
+      element instanceof HTMLInputElement &&
+      ['checkbox', 'radio'].includes(element.type) &&
+      (element.checked || element.indeterminate) &&
+      style.appearance === 'none'
+    ) {
+      const hasMark = ['::before', '::after'].some((pseudo) => {
+        const mark = getComputedStyle(element, pseudo);
+        return (
+          !['none', 'normal'].includes(mark.content) &&
+          mark.display !== 'none' &&
+          Number(mark.opacity) > 0 &&
+          parseFloat(mark.width) > 1 &&
+          parseFloat(mark.height) > 1
+        );
+      });
+      if (!hasMark && style.backgroundImage === 'none')
+        add(
+          element,
+          'control-selection-mark',
+          'Selected control has no authored visible mark',
+        );
+    }
+    if (element instanceof HTMLInputElement && element.type === 'range') {
+      const parts = CSS.supports('selector(input::-moz-range-thumb)')
+        ? ['::-moz-range-track', '::-moz-range-thumb']
+        : ['::-webkit-slider-runnable-track', '::-webkit-slider-thumb'];
+      for (const part of parts)
+        if (!authoredPart(element, part))
+          add(
+            element,
+            'control-range-part',
+            `Missing authored ${part} surface`,
+          );
+    }
+    if (
+      element instanceof HTMLProgressElement ||
+      element instanceof HTMLMeterElement
+    ) {
+      const part =
+        element instanceof HTMLProgressElement
+          ? CSS.supports('selector(progress::-moz-progress-bar)')
+            ? '::-moz-progress-bar'
+            : '::-webkit-progress-value'
+          : CSS.supports('selector(meter::-moz-meter-bar)')
+            ? '::-moz-meter-bar'
+            : '::-webkit-meter-optimum-value';
+      if (!authoredPart(element, part))
+        add(
+          element,
+          'control-progress-part',
+          'Missing authored progress or meter value',
+        );
+    }
+  }
+  for (const element of new Set([
+    document.documentElement,
+    ...document.querySelectorAll('*'),
+  ])) {
+    if (!visible(element) || forced) continue;
+    const style = getComputedStyle(element);
+    const scrolls =
+      element === document.documentElement ||
+      (/(auto|scroll)/.test(style.overflowY) &&
+        element.scrollHeight > element.clientHeight + 1) ||
+      (/(auto|scroll)/.test(style.overflowX) &&
+        element.scrollWidth > element.clientWidth + 1);
+    if (
+      scrolls &&
+      (!style.scrollbarColor || style.scrollbarColor === 'auto') &&
+      !(
+        CSS.supports('selector(::-webkit-scrollbar-thumb)') &&
+        authoredPart(element, '::-webkit-scrollbar-thumb')
+      )
+    )
+      add(
+        element,
+        'control-scrollbar',
+        'Scrollable surface has an unstyled platform scrollbar',
+      );
+  }
+  for (const element of document.querySelectorAll('summary')) {
+    if (!visible(element)) continue;
+    const marker = getComputedStyle(element, '::marker');
+    const before = getComputedStyle(element, '::before');
+    if (
+      getComputedStyle(element).listStyleType !== 'none' &&
+      marker.content === 'normal'
+    )
+      add(
+        element,
+        'control-disclosure-marker',
+        'Disclosure still uses the platform marker',
+      );
+    if (before.maskImage === 'none' && !element.querySelector('svg'))
+      add(
+        element,
+        'control-disclosure-indicator',
+        'Missing authored disclosure indicator',
+      );
+  }
+  for (const trigger of document.querySelectorAll(
+    '[aria-expanded="true"][aria-controls]',
+  )) {
+    if (
+      !visible(trigger) ||
+      (!trigger.hasAttribute('aria-haspopup') &&
+        trigger.getAttribute('role') !== 'combobox')
+    )
+      continue;
+    const panel = document.getElementById(
+      trigger.getAttribute('aria-controls') ?? '',
+    );
+    if (!panel || !visible(panel)) {
+      add(
+        trigger,
+        'control-popup-missing',
+        'Expanded control has no visible popup',
+      );
+      continue;
+    }
+    const box = panel.getBoundingClientRect();
+    const style = getComputedStyle(panel);
+    const anchor = trigger.getBoundingClientRect();
+    // In-flow catalog examples and their anchors can be below the current
+    // fold. Test their viewport fit after bringing the actual control into
+    // view. A fixed popup still has to fit regardless of its anchor position.
+    const inViewport =
+      style.position === 'fixed' ||
+      (anchor.bottom > 0 &&
+        anchor.top < innerHeight &&
+        anchor.right > 0 &&
+        anchor.left < innerWidth);
+    if (
+      inViewport &&
+      (box.left < -1 ||
+        box.top < -1 ||
+        box.right > innerWidth + 1 ||
+        box.bottom > innerHeight + 1)
+    )
+      add(panel, 'control-popup-viewport', 'Open control exceeds the viewport');
+    if (['transparent', 'rgba(0, 0, 0, 0)'].includes(style.backgroundColor))
+      add(
+        panel,
+        'control-popup-surface',
+        'Open control has no authored surface',
+      );
+  }
+  return findings;
+}
+
 /** Measure ordinary select indicators in initial and enhanced HTML. */
 export function inspectControlIndicators() {
   /** @type {{kind: string, text: string, element: string}[]} */

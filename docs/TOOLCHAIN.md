@@ -31,7 +31,7 @@ The Lighthouse trace dependency exposes declarations incompatible with exact opt
 
 GitHub Actions are pinned to reviewed full SHAs. Dependabot proposes weekly npm and Actions updates without automatic merging. Motion, a UI framework, hosted QR services and additional agent-browser tools have no demonstrated role in the initial product.
 
-The expanded content formats and technical controls use the same locked dependencies. Pure TypeScript builds URI, vCard and iCalendar payloads; the existing encoder supplies all four correction levels and version/mask selection. Native controls avoid another UI/runtime package.
+The expanded content formats and technical controls use the same locked dependencies. Pure TypeScript builds URI, vCard and iCalendar payloads; the existing encoder supplies all four correction levels and version/mask selection. Reviewed authored dropdown and date/time surfaces preserve native form semantics without another UI/runtime package. Native semantics do not permit an unstyled operating-system popup in a normal theme.
 
 ## Bilingual regression
 

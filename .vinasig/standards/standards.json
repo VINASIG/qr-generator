@@ -306,8 +306,8 @@
       "level": "MUST",
       "summary": "Styled open and closed form controls across supported engines",
       "verification": ["automatic", "agent", "human"],
-      "evidence": "Opened controls and initial HTML screenshots, measured dropdown indicator inset/gap/size, long/enlarged labels, keyboard and form regressions",
-      "exceptions": "File, print and download browser dialogs remain platform interactions. No blanket exemption for native form popups."
+      "evidence": "Complete control inventory, initial/open/scrolled/deployed screenshots, authored native subparts and popup scrollbars, measured indicator spacing, long/enlarged labels, keyboard/touch/form regressions and forced-colors checks",
+      "exceptions": "File, print and download browser dialogs remain platform interactions. Preserve accessibility rendering under forced colors. No blanket exemption for ordinary native form popups or unstyled scrollbars."
     },
     {
       "id": "LIC-001",

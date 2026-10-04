@@ -1,8 +1,8 @@
 # Standards integration
 
-The project adopts the `web-typescript` profile from VINASIG/agent-standards version 0.1.0, a public preview, at commit `3dc9486b3cba4d7d7c4375fa145d73e53b6137a2`.
+The project adopts the `web-typescript` profile from VINASIG/agent-standards version 0.1.0, a public preview, at commit `00fd107bfc651d4eb9cf7f34cf5e0a9f2ee93ee9`.
 
-The reviewed offline bundle digest is `eb0d35d45c774fa157fc64763f8bd235d5a7b7ed8c860819c1ce524d76c6d939`. A dry-run plan was reviewed before import. The local `.vinasig/provenance.json` pins this source and manifest digest. The marked AGENTS.md block and 47 managed payloads are checked for integrity. Seven task-specific skills are installed under `.agents/skills/`.
+The reviewed offline bundle digest is `efe05f654da53716186663ff3186623e521003fbc82eedc624a4c46d0cc8adef`. A dry-run plan was reviewed before import. The local `.vinasig/provenance.json` pins this source and manifest digest. The marked AGENTS.md block and 47 managed payloads are checked for integrity. Seven task-specific skills are installed under `.agents/skills/`.
 
 The Astro consumer adapts the strict reference profile with Astro's strictest TypeScript config, explicit declaration checking, the Astro ESLint parser, generated-HTML validation and checks of actual CSS. Typed ESLint remains strict with zero warnings. Runtime, browser and product behavior require separate tests.
 
