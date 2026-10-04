@@ -147,9 +147,20 @@ async function capture(
     ),
   );
 }
+async function settle(page: Page): Promise<void> {
+  await expect(page.locator('#qr-form')).toHaveAttribute('data-ready', 'true');
+  await expect(page.locator('#qr-form')).not.toHaveAttribute(
+    'data-updating',
+    'true',
+  );
+  await expect(page.locator('#qr-form')).not.toHaveAttribute(
+    'aria-busy',
+    'true',
+  );
+}
 async function generate(page: Page, payload: string): Promise<void> {
   await page.getByRole('textbox', { name: 'Link or text' }).fill(payload);
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
 }
 function decodePng(bytes: Buffer): {
@@ -209,7 +220,9 @@ for (const viewport of viewports)
         if (scale === 200)
           await page.addStyleTag({ content: 'html {font-size:200%}' });
         await capture(page, info, 'idle');
-        await page.getByRole('button', { name: 'Create QR code' }).click();
+        await page.locator('#content').focus();
+        await page.locator('#content').blur();
+        await settle(page);
         await expect(page.getByRole('status')).toContainText('Enter a link');
         await capture(page, info, 'error');
         await generate(
@@ -232,7 +245,7 @@ for (const viewport of viewports)
         await page
           .getByLabel('Password', { exact: true })
           .fill('demo-password');
-        await page.getByRole('button', { name: 'Create QR code' }).click();
+        await settle(page);
         await expect(page.getByRole('status')).toContainText(
           'Your QR code is ready',
         );
@@ -323,9 +336,7 @@ for (const viewport of [
             .analyze();
           expect(expanded.violations).toEqual([]);
           await capture(page, info, theme + '-' + motion + '-export');
-          await page
-            .getByRole('textbox', { name: 'Link or text' })
-            .fill('changed');
+          await page.getByRole('textbox', { name: 'Link or text' }).fill('');
           await expect(
             page.getByRole('button', { name: 'Download PNG', exact: true }),
           ).toBeDisabled();
@@ -365,10 +376,14 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(app.url);
   await chooseSelect(page.getByLabel('Content type', { exact: true }), 'wifi');
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await page.locator('#ssid').focus();
+  await page.locator('#ssid').blur();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('network name');
   await page.getByRole('textbox', { name: 'Network name' }).fill('Cafe; West');
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await page.locator('#password').focus();
+  await page.locator('#password').blur();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('password');
   await page.getByLabel('Password', { exact: true }).fill('a\\b:c,"d');
   await page
@@ -381,7 +396,7 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
   await page
     .getByRole('checkbox', { name: 'Hidden network', exact: true })
     .check();
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   expect(decodePng(await download(page, 'PNG')).text).toBe(
     wifiPayload({
@@ -403,7 +418,7 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
     .then((disabled) => {
       expect(disabled).toBe(true);
     });
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   expect(decodePng(await download(page, 'PNG')).text).toBe(
     'WIFI:T:nopass;S:Cafe\\; West;H:true;;',
@@ -428,9 +443,7 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
     .fill('fixture-password-only');
   await page.getByLabel('Show password', { exact: true }).check();
   await page.getByLabel('Hidden network', { exact: true }).check();
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   await page.getByRole('button', { name: 'Clear', exact: true }).click();
   await capture(page, info, 'cleared-from-wifi');
@@ -474,7 +487,8 @@ test('all PNG sizes and content capacity', async ({ page }) => {
   await page
     .getByRole('textbox', { name: 'Link or text' })
     .fill('a'.repeat(2001));
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await page.locator('#content').blur();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('too long');
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
@@ -494,8 +508,8 @@ test('keyboard, native selection and touch work without hover', async ({
     await page
       .getByRole('textbox', { name: 'Link or text' })
       .fill('Keyboard and touch');
-    await page.getByRole('button', { name: 'Create QR code' }).focus();
-    await page.keyboard.press('Enter');
+    await settle(page);
+    await expect(page.locator('#content')).toBeFocused();
     await expect(page.getByRole('status')).toContainText(
       'Your QR code is ready',
     );
@@ -523,7 +537,7 @@ test('keyboard, native selection and touch work without hover', async ({
     await expect(page.locator('#password')).toBeDisabled();
     await capture(page, info, 'custom-select-keyboard');
     const box = await page
-      .getByRole('button', { name: 'Create QR code' })
+      .getByRole('button', { name: 'Clear', exact: true })
       .boundingBox();
     assert(box);
     expect(box.height).toBeGreaterThanOrEqual(44);
@@ -550,18 +564,23 @@ test('unavailable client script cannot submit QR content to the host', async ({
         );
       await page.goto(app.url);
       const content = page.getByRole('textbox', { name: 'Link or text' });
-      await content.fill('synthetic-privacy-fixture');
+      await expect(content).toBeDisabled();
+      await content.evaluate((node) => {
+        if (!(node instanceof HTMLTextAreaElement))
+          throw new Error('Expected content input');
+        node.value = 'synthetic-privacy-fixture';
+      });
       const create = page.getByRole('button', {
         name: 'Create QR code',
         exact: true,
       });
-      await expect(create).toBeDisabled();
+      await expect(create).toHaveCount(0);
+      await expect(page.locator('#clear')).toBeDisabled();
       for (const control of await page.getByRole('combobox').all())
         await expect(control).toBeDisabled();
       expect(await page.evaluate(inspectInterface)).toEqual([]);
       for (const control of await page.locator('input, textarea, select').all())
         await expect(control).not.toHaveAttribute('name', /./u);
-      await create.click({ force: true });
       await content.press('Enter');
       await capture(
         page,
@@ -598,7 +617,7 @@ test('loaded app generates offline and uses no destination fetch', async ({
     .fill('https://example.com/private?secret=fixture');
   await context.setOffline(true);
   try {
-    await page.getByRole('button', { name: 'Create QR code' }).click();
+    await settle(page);
     await expect(page.getByRole('status')).toContainText(
       'Your QR code is ready',
     );
@@ -670,13 +689,10 @@ test('a changed input cannot be restored by an older PNG callback', async ({
   });
   await page.goto(app.url);
   await page.getByRole('textbox', { name: 'Link or text' }).fill('old payload');
-  await page.getByRole('button', { name: 'Create QR code' }).click();
-  await expect(
-    page.getByRole('button', { name: 'Create QR code' }),
-  ).toBeDisabled();
+  await expect(page.locator('#qr-form')).toHaveAttribute('aria-busy', 'true');
   await page.getByRole('textbox', { name: 'Link or text' }).fill('new payload');
   await expect(
-    page.getByRole('button', { name: 'Create QR code' }),
+    page.getByRole('button', { name: 'Clear', exact: true }),
   ).toBeEnabled();
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
@@ -684,7 +700,7 @@ test('a changed input cannot be restored by an older PNG callback', async ({
   await expect(
     page.getByRole('img', { name: 'Generated QR code' }),
   ).toBeHidden();
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   expect(decodePng(await download(page, 'PNG')).text).toBe('new payload');
 });
@@ -712,19 +728,22 @@ test('PNG failure recovers without leaving an old download enabled', async ({
   await page
     .getByRole('textbox', { name: 'Link or text' })
     .fill('PNG recovery');
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText(
     'PNG could not be created',
   );
   await expect(
-    page.getByRole('button', { name: 'Create QR code' }),
+    page.getByRole('button', { name: 'Clear', exact: true }),
   ).toBeEnabled();
   await expect(
     page.getByRole('button', { name: 'Download SVG', exact: true }),
   ).toBeDisabled();
-  await page.getByRole('button', { name: 'Create QR code' }).click();
+  await page.locator('#content').fill('PNG recovery updated');
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
-  expect(decodePng(await download(page, 'PNG')).text).toBe('PNG recovery');
+  expect(decodePng(await download(page, 'PNG')).text).toBe(
+    'PNG recovery updated',
+  );
 });
 
 test('motion reverses promptly and respects reduced preference', async ({
@@ -732,7 +751,7 @@ test('motion reverses promptly and respects reduced preference', async ({
 }, info) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(app.url);
-  const button = page.getByRole('button', { name: 'Create QR code' });
+  const button = page.getByRole('button', { name: 'Clear', exact: true });
   await button.hover();
   await capture(page, info, 'hover-start', false);
   await page.waitForTimeout(80);
@@ -828,10 +847,10 @@ for (const viewport of standardViewports)
             page.locator('fieldset[data-content-type]:not([hidden])'),
           ).toHaveCount(1);
           await capture(page, info, theme + '-' + fixture.kind + '-empty');
-          await page
-            .getByRole('button', { name: 'Create QR code', exact: true })
-            .click();
-          await expect(page.locator('#' + fixture.first)).toBeFocused();
+          await page.locator('#' + fixture.first).focus();
+          await page.locator('#' + fixture.first).blur();
+          await settle(page);
+          await expect(page.locator('#' + fixture.first)).not.toBeFocused();
           await expect(page.locator('#' + fixture.first)).toHaveAttribute(
             'aria-invalid',
             'true',
@@ -840,9 +859,7 @@ for (const viewport of standardViewports)
             await page.getByText(fixture.more, { exact: true }).click();
           for (const [id, value] of Object.entries(fixture.values))
             await page.locator('#' + id).fill(value);
-          await page
-            .getByRole('button', { name: 'Create QR code', exact: true })
-            .click();
+          await settle(page);
           await expect(page.getByRole('status')).toContainText(
             'Your QR code is ready',
           );
@@ -953,9 +970,7 @@ for (const fixture of contentFixtures)
             .evaluate((input) => getComputedStyle(input).fontSize),
         ).toBe('32px');
       }
-      await page
-        .getByRole('button', { name: 'Create QR code', exact: true })
-        .click();
+      await settle(page);
       await expect(page.getByRole('status')).toContainText(
         'Your QR code is ready',
       );
@@ -1018,11 +1033,9 @@ test('advanced options validate capacity, invalidate every setting and reset to 
   await page
     .getByRole('textbox', { name: 'Link or text' })
     .fill('a'.repeat(100));
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('needs version');
-  await expect(page.getByLabel('QR version', { exact: true })).toBeFocused();
+  await expect(page.locator('#content')).toBeFocused();
   await capture(page, info, 'version-too-small');
   await chooseSelect(page.getByLabel('QR version', { exact: true }), 'auto');
   await chooseSelect(page.getByLabel('Error correction', { exact: true }), 'H');
@@ -1030,19 +1043,19 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     .getByRole('textbox', { name: 'Link or text' })
     .fill('a'.repeat(1274));
   await page.getByText('Advanced settings', { exact: true }).click();
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText(
     'will not fit at level H',
   );
-  await expect(
-    page.getByLabel('Error correction', { exact: true }),
-  ).toBeFocused();
+  await expect(page.locator('#advanced-settings')).not.toHaveAttribute(
+    'open',
+    '',
+  );
   await expect(
     page.getByRole('button', { name: 'Download SVG', exact: true }),
   ).toBeDisabled();
   await capture(page, info, 'correction-capacity-error');
+  await page.getByText('Advanced settings', { exact: true }).click();
   await chooseSelect(page.getByLabel('Error correction', { exact: true }), 'M');
   await generate(page, 'Recovered settings');
   expect(decodePng(await download(page, 'PNG')).text).toBe(
@@ -1077,10 +1090,12 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await page.getByLabel('Event title', { exact: true }).fill('All-day fixture');
   await page.getByLabel('Start date', { exact: true }).fill('2026-12-31');
   await page.getByLabel('End date', { exact: true }).fill('2026-12-31');
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
-  await expect(page.getByLabel('Start time', { exact: true })).toBeFocused();
+  await page.locator('#event-start-time').focus();
+  await page.locator('#event-start-time').blur();
+  await settle(page);
+  await expect(
+    page.getByLabel('Start time', { exact: true }),
+  ).not.toBeFocused();
   await expect(page.getByRole('status')).toContainText('Choose a time');
   await page.getByLabel('Start time', { exact: true }).fill('09:00');
   await page.getByLabel('End time', { exact: true }).fill('10:00');
@@ -1098,17 +1113,14 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await expect(page.getByLabel('End time', { exact: true })).toBeHidden();
   await expect(page.getByLabel('End time', { exact: true })).toBeDisabled();
   await page.getByLabel('End date', { exact: true }).fill('2026-12-30');
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await page.locator('#event-end').blur();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText(
     'last day must be on or after',
   );
-  await expect(page.getByLabel('End date', { exact: true })).toBeFocused();
+  await expect(page.getByLabel('End date', { exact: true })).not.toBeFocused();
   await page.getByLabel('End date', { exact: true }).fill('2026-12-31');
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   const payload = decodePng(await download(page, 'PNG')).text;
   expect(payload).toContain(
@@ -1135,16 +1147,14 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
   ).toBeDisabled();
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   expect(decodePng(await download(page, 'PNG')).text).toContain(
     'DTSTART:20261231T020000Z\r\nDTEND:20261231T030000Z\r\n',
   );
 });
 
-test('optional details open at the invalid field and a changed type cannot revive an old PNG', async ({
+test('automatic validation preserves optional disclosures and a changed type cannot revive an old PNG', async ({
   page,
 }) => {
   await page.goto(app.url);
@@ -1158,22 +1168,20 @@ test('optional details open at the invalid field and a changed type cannot reviv
     .getByLabel('Website if needed', { exact: true })
     .fill('javascript:alert(1)');
   await page.getByText('More contact details', { exact: true }).click();
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(
     page.getByLabel('Website if needed', { exact: true }),
-  ).toBeFocused();
-  await expect(page.locator('#contact-more')).toHaveAttribute('open', '');
+  ).not.toBeFocused();
+  await expect(page.locator('#contact-more')).not.toHaveAttribute('open', '');
+  await expect(page.getByRole('status')).toContainText('http');
+  await page.getByText('More contact details', { exact: true }).click();
   await expect(
     page.getByLabel('Website if needed', { exact: true }),
   ).toHaveValue('javascript:alert(1)');
   await page
     .getByLabel('Website if needed', { exact: true })
     .fill('https://example.com');
-  await page
-    .getByRole('button', { name: 'Create QR code', exact: true })
-    .click();
+  await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   await chooseSelect(page.getByLabel('Content type', { exact: true }), 'sms');
   await expect(
@@ -1213,7 +1221,7 @@ test('download URL cleanup preserves the selected settings and current preview',
   );
 });
 
-test('oversized structured content focuses its visible or collapsed field without leaking to another type', async ({
+test('oversized structured content marks its field without focus changes or leaking to another type', async ({
   page,
 }) => {
   await page.goto(app.url);
@@ -1234,12 +1242,11 @@ test('oversized structured content focuses its visible or collapsed field withou
     await page
       .locator('#' + large)
       .fill((kind === 'file' ? 'https://example.com/' : '') + 'x'.repeat(2100));
+    await page.locator('#' + large).blur();
     if (more) await page.getByText(more, { exact: true }).click();
-    await page
-      .getByRole('button', { name: 'Create QR code', exact: true })
-      .click();
+    await settle(page);
     await expect(page.getByRole('status')).toContainText('too long');
-    await expect(page.locator('#' + large)).toBeFocused();
+    await expect(page.locator('#' + large)).not.toBeFocused();
     await expect(page.locator('#' + large)).toHaveAttribute(
       'aria-invalid',
       'true',

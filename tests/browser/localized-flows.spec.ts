@@ -57,7 +57,12 @@ for (const [width, height, theme] of [
         await page
           .locator('#content-type-options [data-value="' + fixture.kind + '"]')
           .click();
-        await page.locator('#generate').click();
+        await page.locator('#' + fixture.first).focus();
+        await page.locator('#' + fixture.first).blur();
+        await expect(page.locator('#' + fixture.first)).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
         await expect(page.locator('#form-status')).not.toBeEmpty();
         await expect(page.locator('#form-status')).not.toContainText('Enter ');
         const details =
@@ -69,7 +74,6 @@ for (const [width, height, theme] of [
         if (details) await page.locator('#' + details + ' summary').click();
         for (const [id, value] of Object.entries(fixture.values))
           await page.locator('#' + id).fill(value);
-        await page.locator('#generate').click();
         await expect(page.locator('#download-png')).toBeEnabled();
         await expect(page.locator('#form-status')).toContainText('Mã QR');
         const event = page.waitForEvent('download');

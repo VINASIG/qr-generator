@@ -1,5 +1,11 @@
 # Verification
 
+## Automatic input regression
+
+`tests/browser/automatic-input.spec.ts` exercises generation without a creation button, valid edits without focus or scroll movement, immediate stale-output removal, blur validation, recovery, Clear, rapid edits, IME composition, PNG size and correction updates. Actual downloaded PNGs are independently decoded. Both locales, light/dark, the five required sizes and 320 px with 200% text run in all three engines. Screenshots are saved in `output/responsive/automatic-input-2026-10-04/after` and must be opened.
+
+Existing export, privacy, content, settings, keyboard, failure and responsive tests now wait for automatic updates. Invalid-field tests use blur or explicit Enter. Assertions requiring a creation button or automatic focus movement were replaced to match the owner's requested interaction. Decoder, privacy, accessibility, geometry and failure-recovery assertions remain in place. No assertion is skipped to accept a failing baseline.
+
 ## Calendar internal spacing regression
 
 `tests/browser/calendar-spacing.spec.ts` measures all four internal gutters separately from the popup's viewport bounds. Calendar rows, day buttons and the final scrolled footer must remain at least 16 CSS px inside the surface. Both start and end calendars check selection and focus in the first and last columns, 44 px day heights, readable day text, Escape and restored focus across 14 widths, 100%/200% text, both languages/themes and Chromium/Firefox/WebKit. Open top and bottom screenshots alongside the geometry results.

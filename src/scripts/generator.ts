@@ -51,14 +51,12 @@ const panels = [
   ...form.querySelectorAll<HTMLFieldSetElement>('fieldset[data-content-type]'),
 ];
 const passwordFields = element('password-fields', HTMLDivElement);
-const generate = element('generate', HTMLButtonElement);
 const clear = element('clear', HTMLButtonElement);
 const size = element('image-size', HTMLSelectElement);
 const pngButton = element('download-png', HTMLButtonElement);
 const svgButton = element('download-svg', HTMLButtonElement);
 const status = element('form-status', HTMLParagraphElement);
 const preview = element('qr-image', HTMLImageElement);
-const previewPanel = element('preview-panel', HTMLElement);
 const empty = element('empty-preview', HTMLDivElement);
 const details = element('encoded-details', HTMLDetailsElement);
 const encoded = element('encoded-content', HTMLParagraphElement);
@@ -78,13 +76,20 @@ let imageUrl = '';
 let png: Blob | null = null;
 let svg: Blob | null = null;
 const downloads = new Set<string>();
+const validated = new Set<string>();
+let pending: number | undefined;
+let composing = false;
 
 function message(text: string, state = 'info'): void {
   status.textContent = t(text);
   status.dataset['state'] = state;
 }
 function invalidate(): void {
+  window.clearTimeout(pending);
+  pending = undefined;
   revision++;
+  form.removeAttribute('aria-busy');
+  delete form.dataset['updating'];
   png = null;
   svg = null;
   pngButton.disabled = true;
@@ -93,10 +98,8 @@ function invalidate(): void {
   preview.removeAttribute('src');
   empty.hidden = false;
   details.hidden = true;
-  details.open = false;
   encoded.textContent = '';
   technical.hidden = true;
-  technical.open = false;
   for (const fact of technical.querySelectorAll('dd[id]'))
     fact.textContent = '';
   if (imageUrl) URL.revokeObjectURL(imageUrl);
@@ -231,17 +234,56 @@ function readPayload(): string {
       throw new InputError('content-type', 'Choose a supported content type.');
   }
 }
-async function create(): Promise<void> {
-  invalidate();
+function presentError(error: unknown, focus = false): void {
+  const candidate =
+    error instanceof InputError ? document.getElementById(error.field) : null;
+  const field =
+    candidate instanceof HTMLInputElement ||
+    candidate instanceof HTMLTextAreaElement ||
+    candidate instanceof HTMLSelectElement
+      ? !candidate.matches(':disabled')
+        ? candidate
+        : null
+      : null;
+  const target =
+    field ??
+    panels
+      .find((panel) => !panel.hidden)
+      ?.querySelector<HTMLElement>('input, textarea, select') ??
+    kind;
+  if (
+    error instanceof InputError &&
+    !focus &&
+    !(target instanceof HTMLSelectElement) &&
+    !validated.has(target.id)
+  ) {
+    message('Complete the required fields to see your QR code.');
+    return;
+  }
+  target.setAttribute('aria-invalid', 'true');
+  if (focus) {
+    let disclosure = target.closest('details');
+    while (disclosure) {
+      disclosure.open = true;
+      disclosure = disclosure.parentElement?.closest('details') ?? null;
+    }
+    focusControl(target);
+  }
+  message(
+    error instanceof Error
+      ? error.message
+      : 'The QR code could not be created. Try again.',
+    'error',
+  );
+}
+async function create(focusError = false): Promise<void> {
   const ticket = revision;
-  generate.disabled = true;
-  clear.disabled = true;
   form.setAttribute('aria-busy', 'true');
-  message('Creating your QR code...');
   try {
     const payload = readPayload();
     const pixels = selectedSize();
     const options = readOptions();
+    message('Updating your QR code...');
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => {
         resolve();
@@ -292,46 +334,26 @@ async function create(): Promise<void> {
     pngButton.disabled = false;
     svgButton.disabled = false;
     message('Your QR code is ready. Download PNG or SVG.', 'success');
-    if (window.matchMedia('(max-width: 760px)').matches) {
-      previewPanel.focus({ preventScroll: true });
-      previewPanel.scrollIntoView({ block: 'start', behavior: 'instant' });
-    }
   } catch (error) {
     if (ticket !== revision) return;
-    const candidate =
-      error instanceof InputError ? document.getElementById(error.field) : null;
-    const field =
-      candidate instanceof HTMLInputElement ||
-      candidate instanceof HTMLTextAreaElement ||
-      candidate instanceof HTMLSelectElement
-        ? !candidate.matches(':disabled')
-          ? candidate
-          : null
-        : null;
-    const target =
-      field ??
-      panels
-        .find((panel) => !panel.hidden)
-        ?.querySelector<HTMLElement>('input, textarea, select') ??
-      kind;
-    let disclosure = target.closest('details');
-    while (disclosure) {
-      disclosure.open = true;
-      disclosure = disclosure.parentElement?.closest('details') ?? null;
-    }
-    target.setAttribute('aria-invalid', 'true');
-    focusControl(target);
-    message(
-      error instanceof Error
-        ? error.message
-        : 'The QR code could not be created. Try again.',
-      'error',
-    );
+    presentError(error, focusError);
   } finally {
-    generate.disabled = false;
-    clear.disabled = false;
-    form.removeAttribute('aria-busy');
+    if (ticket === revision) {
+      form.removeAttribute('aria-busy');
+      delete form.dataset['updating'];
+    }
   }
+}
+function schedule(): void {
+  invalidate();
+  updateFields();
+  message('Your QR code updates automatically as you type.');
+  if (composing) return;
+  form.dataset['updating'] = 'true';
+  pending = window.setTimeout(() => {
+    pending = undefined;
+    void create();
+  }, 200);
 }
 function download(blob: Blob | null, extension: 'png' | 'svg'): void {
   if (!blob) return;
@@ -351,23 +373,62 @@ function download(blob: Blob | null, extension: 'png' | 'svg'): void {
 }
 form.addEventListener('submit', (event) => {
   event.preventDefault();
-  void create();
+  if (composing) return;
+  invalidate();
+  updateFields();
+  void create(true);
+});
+form.addEventListener('keydown', (event) => {
+  if (
+    event.key === 'Enter' &&
+    !event.defaultPrevented &&
+    event.target instanceof HTMLInputElement &&
+    !['checkbox', 'radio'].includes(event.target.type)
+  ) {
+    event.preventDefault();
+    if (!event.isComposing) form.requestSubmit();
+  }
 });
 form.addEventListener('input', (event) => {
   if (event.target === show) {
     updateFields();
     return;
   }
-  invalidate();
-  updateFields();
-  message('Content changed. Create a new QR code to download it.');
+  if (event.target instanceof HTMLElement) validated.delete(event.target.id);
+  schedule();
 });
-size.addEventListener('change', () => {
-  invalidate();
-  message('Size changed. Create a new QR code to download it.');
+form.addEventListener('focusout', (event) => {
+  if (event.relatedTarget === clear) return;
+  if (
+    composing ||
+    !(
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    )
+  )
+    return;
+  validated.add(event.target.id);
+  try {
+    readPayload();
+  } catch (error) {
+    presentError(error);
+  }
 });
+form.addEventListener('compositionstart', () => {
+  composing = true;
+  invalidate();
+});
+form.addEventListener('compositionend', () => {
+  composing = false;
+  schedule();
+});
+size.addEventListener('input', schedule);
 form.addEventListener('reset', () => {
+  composing = false;
+  validated.clear();
   invalidate();
+  details.open = false;
+  technical.open = false;
   // Read defaults after the native reset action completes.
   window.setTimeout(() => {
     size.value = '1024';
@@ -391,5 +452,13 @@ window.addEventListener('pagehide', () => {
   for (const url of downloads) URL.revokeObjectURL(url);
   downloads.clear();
 });
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) form.reset();
+});
 updateFields();
-generate.disabled = false;
+clear.disabled = false;
+for (const submit of form.querySelectorAll<HTMLButtonElement>(
+  '[data-enter-submit]',
+))
+  submit.disabled = false;
+form.dataset['ready'] = 'true';

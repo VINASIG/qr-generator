@@ -174,6 +174,7 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                   id="text-fields"
                   class="fields"
                   data-content-type="text"
+                  disabled
                 >
                   <legend class="visually-hidden">URL or text details</legend>
                   <label for="content">Link or text</label>
@@ -328,11 +329,14 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                     level.
                   </p>
                 </details>
+                <p class="supporting">
+                  Your QR code updates automatically as you type.
+                </p>
+                <button type="submit" hidden disabled data-enter-submit>
+                  Check entered content
+                </button>
                 <div class="form-actions">
-                  <button id="generate" class="primary" type="submit" disabled>
-                    Create QR code
-                  </button>
-                  <button id="clear" class="quiet" type="reset">
+                  <button id="clear" class="quiet" type="reset" disabled>
                     Clear
                   </button>
                 </div>

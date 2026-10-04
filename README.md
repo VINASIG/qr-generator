@@ -6,7 +6,7 @@ The intended public website is [VINASIG QR Generator](https://qr.vinasig.io.vn/)
 
 ## A focused tool
 
-- Enter a complete URL or any text, then create a code.
+- Enter a complete URL or any text. The code updates automatically as you type.
 - Choose one content type; only its fields are shown. Contact and event extras stay collapsed until needed.
 - Use Wi-Fi for personal WPA, WEP or open networks; email, phone and SMS for compatible app actions; vCard for a contact; coordinates for a location; or iCalendar for an event.
 - Share an image, PDF or other file using its direct HTTP(S) link. The file stays with its existing host; it is not embedded or uploaded here.
@@ -48,6 +48,7 @@ The production preview uses an automatically selected loopback port through `npm
 - [Toolchain and version decisions](docs/TOOLCHAIN.md)
 - [Tests and verification boundaries](tests/README.md)
 - [Content expansion audit](docs/audits/2026-10-03-content-types.md)
+- [Automatic input verification](docs/audits/automatic-input-2026-10-04.md)
 - [Source and artwork rights](LICENSE_STATUS.md) and [third-party notices](THIRD_PARTY_NOTICES.md)
 
 The interface uses reviewed English and Vietnamese, local Space Grotesk and VINASIG's adopted design tokens. QR exports use standard Model 2, are black on white, keep at least a four-module quiet zone and contain no VINASIG logo, watermark or remote resources. PNG modules use integer pixel sizes. Error correction defaults to M. Content is limited to 2,000 UTF-8 bytes and must fit its selected correction level and version. Higher correction can require a denser code; an explicit version that is too small produces a correction rather than a broken export.
