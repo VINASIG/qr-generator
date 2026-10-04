@@ -138,6 +138,34 @@ for (const route of ['', 'vi/'])
           reducedMotion: 'reduce',
         });
         await page.goto(new URL(route, app.url).href);
+        await page.evaluate(() => document.fonts.ready);
+        const advanced = page.locator('#advanced-settings');
+        const disclosure = advanced.locator('summary');
+        await expect(advanced).not.toHaveAttribute('open');
+        const glyph = await disclosure.evaluate((element) => {
+          const style = getComputedStyle(element, '::before');
+          return {
+            position: style.position,
+            display: style.display,
+            gap: parseFloat(style.marginInlineEnd),
+            fontSize: parseFloat(style.fontSize),
+            transform: style.transform,
+          };
+        });
+        expect(glyph.position).toBe('static');
+        expect(glyph.display).toBe('inline-block');
+        expect(glyph.gap).toBeGreaterThanOrEqual(glyph.fontSize * 0.49);
+        await page.screenshot({ path: info.outputPath('advanced-closed.png') });
+        await disclosure.click();
+        await expect(advanced).toHaveAttribute('open', '');
+        await page.screenshot({ path: info.outputPath('advanced-open.png') });
+        expect(
+          await disclosure.evaluate(
+            (element) => getComputedStyle(element, '::before').transform,
+          ),
+        ).not.toBe(glyph.transform);
+        expect(await page.evaluate(inspectControlSurfaces)).toEqual([]);
+        await disclosure.click();
         const content = page.locator('#content-type-control');
         await content.click();
         await page.keyboard.press('End');
