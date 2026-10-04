@@ -16,7 +16,7 @@ The offline installer applied the reviewed bundle from agent-standards commit `0
 
 The local production-preview sweep covered 20 Chromium cases over routes `/`, `vi/` in both languages and both themes. It used 360 x 800, 390 x 844, 768 x 1024, 1024 x 768 and 1440 x 900. Each case traversed the whole page scroll range, captured full-page images or all segments of a long page, and checked page width, runtime errors, interface copy, control surfaces, ordinary indicators and the header.
 
-A separate 48-capture state review exercised the changed and retained controls at 390 x 844 in Chromium, Firefox and WebKit, both locales and themes. Opened images and contact sheets were inspected.
+A separate 72-capture state review exercised the changed and retained controls at 390 x 844 in Chromium, Firefox and WebKit, both locales and themes. It includes the actual advanced-settings summary in closed and opened states. Opened images and contact sheets were inspected.
 
 Screenshots remain in `output/responsive/control-surfaces-2026-10-04/`, separated into immutable before captures, after captures, per-engine state images and forced-colors checks where relevant. The organization matrix and state reports remain in the QR Generator checkout's ignored output. Automated geometry is separate from visual inspection.
 
