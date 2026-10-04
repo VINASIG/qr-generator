@@ -347,15 +347,17 @@ async function inspectThemeIcons(page: Page): Promise<void> {
   assert.equal(await toggle.locator('.theme-moon').isVisible(), !dark);
   const geometry = await toggle.evaluate((button) => {
     const bounds = button.getBoundingClientRect();
+    // DOMRect subtraction can lose millionths of a CSS pixel.
+    const cssPixels = (value: number): number => Number(value.toFixed(3));
     const icon = Array.from(button.querySelectorAll('svg')).find(
       (node) => getComputedStyle(node).display !== 'none',
     );
     const glyph = icon?.getBoundingClientRect();
     return {
-      width: bounds.width,
-      height: bounds.height,
-      iconWidth: glyph?.width,
-      iconHeight: glyph?.height,
+      width: cssPixels(bounds.width),
+      height: cssPixels(bounds.height),
+      iconWidth: glyph ? cssPixels(glyph.width) : undefined,
+      iconHeight: glyph ? cssPixels(glyph.height) : undefined,
     };
   });
   assert(
