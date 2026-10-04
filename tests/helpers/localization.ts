@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import type { Browser } from 'playwright';
+import type { Browser, Page } from 'playwright';
 
 /** Read template copy only. User values, code and protocol identifiers are excluded. */
 export function collectAuthoredCopy(): string[] {
@@ -143,6 +143,7 @@ export async function checkLocalization(
           'dark',
         );
         assert.equal(await toggle.getAttribute('aria-pressed'), 'true');
+        await inspectThemeIcons(page);
         assert.equal(
           await toggle.getAttribute('aria-label'),
           language === 'vi'
@@ -236,6 +237,7 @@ export async function checkLocalization(
         assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), [
           'vinasig-theme',
         ]);
+        await inspectThemeIcons(page);
         const light = await page.evaluate(
           () => getComputedStyle(document.body).backgroundColor,
         );
@@ -279,6 +281,7 @@ export async function checkLocalization(
         for (const source of sources)
           assert.equal(await source.getAttribute('media'), 'not all');
         await page.locator('[data-theme-toggle]').click();
+        await inspectThemeIcons(page);
         assert.equal(
           await page.locator('html').getAttribute('data-theme'),
           'dark',
@@ -325,6 +328,7 @@ export async function checkLocalization(
           ?.disabled,
     );
     await page.locator('[data-theme-toggle]').click();
+    await inspectThemeIcons(page);
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
     await page.emulateMedia({ colorScheme: 'dark' });
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
@@ -332,4 +336,32 @@ export async function checkLocalization(
   } finally {
     await blocked.close();
   }
+}
+
+async function inspectThemeIcons(page: Page): Promise<void> {
+  const toggle = page.locator('[data-theme-toggle]');
+  const dark =
+    (await page.locator('html').getAttribute('data-theme')) === 'dark';
+  assert.equal(await toggle.locator('svg').count(), 2);
+  assert.equal(await toggle.locator('.theme-sun').isVisible(), dark);
+  assert.equal(await toggle.locator('.theme-moon').isVisible(), !dark);
+  const geometry = await toggle.evaluate((button) => {
+    const bounds = button.getBoundingClientRect();
+    const icon = Array.from(button.querySelectorAll('svg')).find(
+      (node) => getComputedStyle(node).display !== 'none',
+    );
+    const glyph = icon?.getBoundingClientRect();
+    return {
+      width: bounds.width,
+      height: bounds.height,
+      iconWidth: glyph?.width,
+      iconHeight: glyph?.height,
+    };
+  });
+  assert(
+    geometry.width >= 44 && geometry.height >= 44,
+    JSON.stringify(geometry),
+  );
+  assert.equal(geometry.iconWidth, 20);
+  assert.equal(geometry.iconHeight, 20);
 }

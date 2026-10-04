@@ -18,3 +18,7 @@ Generated QR files contain the user's data and geometry only. They do not contai
 Use the unchanged Primary Color lockup on the light canvas and the unchanged Reversed lockup on the dark canvas. A native picture source selects the existing dark variant without JavaScript. The logo link has no white panel, padded card, rounded artwork, shadow or filter. Its minimum hit height is 44 px, while the image retains the original 540 by 140 aspect ratio.
 
 The newly copied Reversed SVG was reviewed at VINASIG/vinasig-brand-assets commit `83ed7515c81c3b2a28888a75c754e44562d5b107`. Its SHA-256 is `98ceaaace06835138856d3710b4fed38714528573f78b19e710db796aea53d07`. The manifest records this separate review and preserves every earlier asset digest. Existing design/font adoption pins remain historical records of those unchanged files. Generated user output and printable document surfaces keep their intended styling.
+
+## Appearance control approved on 5 October 2026
+
+The owner selected the existing TOTP and QR Scanner appearance pattern for VINASIG websites. Use decorative Lucide Sun and Moon SVGs at 20 CSS px inside a button with a target of at least 44 CSS px. Light mode shows Moon to offer dark mode. Dark mode shows Sun to offer light mode. Keep a localized action name, pressed state, visible keyboard focus and the unchanged language link. Do not replace these recognizable icons with filled squares. Regression checks inspect both icons, their visibility and dimensions before and after toggling, persistence and blocked storage.

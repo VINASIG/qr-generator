@@ -1,5 +1,6 @@
 ---
 import '../styles/preferences.css';
+import { Sun, Moon } from '@lucide/astro';
 interface Props {
   lang: 'vi' | 'en';
   alternate: string;
@@ -22,7 +23,8 @@ const label =
     aria-pressed="false"
     disabled
   >
-    <span aria-hidden="true"></span>
+    <Sun class="theme-sun" size={20} aria-hidden="true" />
+    <Moon class="theme-moon" size={20} aria-hidden="true" />
   </button>
   <a
     class="language-switch"

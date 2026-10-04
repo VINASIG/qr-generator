@@ -24,11 +24,22 @@
   cursor: pointer;
 }
 
-.theme-switch span {
+.theme-switch svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-switch .theme-sun {
+  display: none;
+}
+
+:root[data-theme='dark'] .theme-switch .theme-sun {
   display: block;
-  width: 16px;
-  height: 16px;
-  background: currentcolor;
+}
+
+:root[data-theme='dark'] .theme-switch .theme-moon {
+  display: none;
 }
 
 .theme-switch:disabled {
