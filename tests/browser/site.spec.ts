@@ -1078,6 +1078,7 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   page,
 }, info) => {
   await page.setViewportSize({ width: 360, height: 800 });
+  await page.clock.install({ time: new Date('2026-10-03T00:00:00Z') });
   await page.goto(app.url);
   await chooseSelect(page.getByLabel('Content type', { exact: true }), 'event');
   // Engines can return the IANA alias Asia/Saigon for Asia/Ho_Chi_Minh.
@@ -1132,6 +1133,8 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   expect(payload).not.toMatch(/DT(?:START|END):/u);
   await page.getByText('Encoded content', { exact: true }).click();
   await capture(page, info, 'calendar-all-day');
+  // Inspect invalidation before allowing the 200 ms update to finish.
+  await page.clock.pauseAt(new Date('2026-10-03T00:10:00Z'));
   await page.getByLabel('All-day event', { exact: true }).uncheck();
   await expect(page.getByLabel('Start date', { exact: true })).toHaveValue(
     '2026-12-31',
@@ -1150,6 +1153,7 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
   ).toBeDisabled();
+  await page.clock.resume();
   await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
   expect(decodePng(await download(page, 'PNG')).text).toContain(
