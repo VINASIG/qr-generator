@@ -1,5 +1,6 @@
 ---
 import { CalendarDays, ChevronLeft, ChevronRight, X } from '@lucide/astro';
+import FieldError from './FieldError.astro';
 interface Props {
   id: string;
   label: string;
@@ -26,7 +27,7 @@ const weekdays = [
     required={required}
     autocomplete="off"
     spellcheck="false"
-    aria-describedby={describedby + ' ' + id + '-error'}
+    aria-describedby={describedby}
     maxlength="10"
     data-date-picker
   />
@@ -41,10 +42,10 @@ const weekdays = [
     <CalendarDays size={20} aria-hidden="true" />
   </button>
 </div>
+<FieldError id={id} />
 <p class="supporting date-format">
   Enter year-month-day, for example 2026-10-03, or choose a day.
 </p>
-<p id={id + '-error'} class="supporting" hidden></p>
 <dialog id={id + '-dialog'} class="date-dialog" aria-labelledby={id + '-title'}>
   <div class="date-title-row">
     <h2 id={id + '-title'}>{'Choose ' + label.toLowerCase()}</h2>

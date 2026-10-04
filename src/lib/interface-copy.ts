@@ -1,6 +1,9 @@
 import dictionary from '../locales/vi.json' with { type: 'json' };
 import { translateCopy } from './localization.ts';
 export function interfaceCopy(value: string, vietnamese: boolean): string {
+  if (value === 'Use one email address with an unquoted ASCII name before @.')
+    value =
+      'Enter a valid email address, for example hello@example.com. Use letters without accents before @.';
   if (!vietnamese) return value;
   const translated = translateCopy(value, dictionary);
   if (translated !== value) return translated;

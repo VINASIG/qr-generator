@@ -79,12 +79,38 @@ const downloads = new Set<string>();
 const validated = new Set<string>();
 let pending: number | undefined;
 let composing = false;
+let clearing = false;
+let pointerActive = false;
+let pendingValidation: (() => void) | undefined;
+window.addEventListener('pointerdown', () => {
+  pointerActive = true;
+});
+clear.addEventListener('pointerdown', () => {
+  clearing = true;
+});
+window.addEventListener('pointerup', () => {
+  window.setTimeout(() => {
+    clearing = false;
+    pointerActive = false;
+    const validate = pendingValidation;
+    pendingValidation = undefined;
+    validate?.();
+  }, 0);
+});
+window.addEventListener('pointercancel', () => {
+  clearing = false;
+  pointerActive = false;
+  const validate = pendingValidation;
+  pendingValidation = undefined;
+  validate?.();
+});
 
 function message(text: string, state = 'info'): void {
   status.textContent = t(text);
   status.dataset['state'] = state;
 }
 function invalidate(): void {
+  pendingValidation = undefined;
   window.clearTimeout(pending);
   pending = undefined;
   revision++;
@@ -106,6 +132,12 @@ function invalidate(): void {
   imageUrl = '';
   for (const field of form.querySelectorAll('[aria-invalid]'))
     field.removeAttribute('aria-invalid');
+  for (const error of form.querySelectorAll<HTMLParagraphElement>(
+    '[data-field-error]',
+  )) {
+    error.textContent = '';
+    error.hidden = true;
+  }
 }
 function updateFields(): void {
   const wifi = kind.value === 'wifi';
@@ -235,8 +267,16 @@ function readPayload(): string {
   }
 }
 function presentError(error: unknown, focus = false): void {
-  const candidate =
-    error instanceof InputError ? document.getElementById(error.field) : null;
+  if (!(error instanceof InputError)) {
+    message(
+      error instanceof Error
+        ? error.message
+        : 'The QR code could not be created. Try again.',
+      'error',
+    );
+    return;
+  }
+  const candidate = document.getElementById(error.field);
   const field =
     candidate instanceof HTMLInputElement ||
     candidate instanceof HTMLTextAreaElement ||
@@ -252,7 +292,6 @@ function presentError(error: unknown, focus = false): void {
       ?.querySelector<HTMLElement>('input, textarea, select') ??
     kind;
   if (
-    error instanceof InputError &&
     !focus &&
     !(target instanceof HTMLSelectElement) &&
     !validated.has(target.id)
@@ -261,20 +300,16 @@ function presentError(error: unknown, focus = false): void {
     return;
   }
   target.setAttribute('aria-invalid', 'true');
-  if (focus) {
-    let disclosure = target.closest('details');
-    while (disclosure) {
-      disclosure.open = true;
-      disclosure = disclosure.parentElement?.closest('details') ?? null;
-    }
-    focusControl(target);
+  const hint = element(target.id + '-error', HTMLParagraphElement);
+  hint.textContent = t(error.message);
+  hint.hidden = false;
+  let disclosure = target.closest('details');
+  while (disclosure) {
+    disclosure.open = true;
+    disclosure = disclosure.parentElement?.closest('details') ?? null;
   }
-  message(
-    error instanceof Error
-      ? error.message
-      : 'The QR code could not be created. Try again.',
-    'error',
-  );
+  if (focus) focusControl(target);
+  message('Check the highlighted field.', 'error');
 }
 async function create(focusError = false): Promise<void> {
   const ticket = revision;
@@ -398,7 +433,7 @@ form.addEventListener('input', (event) => {
   schedule();
 });
 form.addEventListener('focusout', (event) => {
-  if (event.relatedTarget === clear) return;
+  if (clearing || event.relatedTarget === clear) return;
   if (
     composing ||
     !(
@@ -407,12 +442,20 @@ form.addEventListener('focusout', (event) => {
     )
   )
     return;
-  validated.add(event.target.id);
-  try {
-    readPayload();
-  } catch (error) {
-    presentError(error);
-  }
+  const target = event.target;
+  const ticket = revision;
+  const validate = () => {
+    if (ticket !== revision || composing || target.matches(':disabled')) return;
+    validated.add(target.id);
+    try {
+      readPayload();
+    } catch (error) {
+      presentError(error);
+    }
+  };
+  // Inline errors reflow the form. Finish a pointer click before inserting them.
+  if (pointerActive) pendingValidation = validate;
+  else validate();
 });
 form.addEventListener('compositionstart', () => {
   composing = true;
@@ -424,6 +467,8 @@ form.addEventListener('compositionend', () => {
 });
 size.addEventListener('input', schedule);
 form.addEventListener('reset', () => {
+  clearing = false;
+  pointerActive = false;
   composing = false;
   validated.clear();
   invalidate();

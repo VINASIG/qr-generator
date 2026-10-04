@@ -230,5 +230,8 @@
   "Enter the full name for this contact.": "Nhập họ tên đầy đủ của người liên hệ.",
   "Choose a date for this event.": "Chọn ngày diễn ra sự kiện.",
   "Choose a time for this event.": "Chọn giờ diễn ra sự kiện.",
-  "Choose a supported content type.": "Chọn loại nội dung được hỗ trợ."
+  "Choose a supported content type.": "Chọn loại nội dung được hỗ trợ.",
+  "Clear all": "Xóa tất cả",
+  "Check the highlighted field.": "Kiểm tra ô được đánh dấu.",
+  "Enter a valid email address, for example hello@example.com. Use letters without accents before @.": "Nhập địa chỉ email hợp lệ, ví dụ hello@example.com. Dùng chữ không dấu trước @."
 }

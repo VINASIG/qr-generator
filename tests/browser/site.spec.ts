@@ -223,7 +223,9 @@ for (const viewport of viewports)
         await page.locator('#content').focus();
         await page.locator('#content').blur();
         await settle(page);
-        await expect(page.getByRole('status')).toContainText('Enter a link');
+        await expect(page.locator('#content-error')).toContainText(
+          'Enter a link',
+        );
         await capture(page, info, 'error');
         await generate(
           page,
@@ -348,7 +350,7 @@ for (const viewport of [
             'Tiếng Việt • 日本語 • 😀',
           );
           await page
-            .getByRole('button', { name: 'Clear', exact: true })
+            .getByRole('button', { name: 'Clear all', exact: true })
             .click();
           await expect(
             page.getByRole('textbox', { name: 'Link or text' }),
@@ -379,12 +381,12 @@ test('Wi-Fi validation, punctuation, password visibility and open network', asyn
   await page.locator('#ssid').focus();
   await page.locator('#ssid').blur();
   await settle(page);
-  await expect(page.getByRole('status')).toContainText('network name');
+  await expect(page.locator('#ssid-error')).toContainText('network name');
   await page.getByRole('textbox', { name: 'Network name' }).fill('Cafe; West');
   await page.locator('#password').focus();
   await page.locator('#password').blur();
   await settle(page);
-  await expect(page.getByRole('status')).toContainText('password');
+  await expect(page.locator('#password-error')).toContainText('password');
   await page.getByLabel('Password', { exact: true }).fill('a\\b:c,"d');
   await page
     .getByRole('checkbox', { name: 'Show password', exact: true })
@@ -445,7 +447,7 @@ test('clearing Wi-Fi resets the visible mode and removes all entered data', asyn
   await page.getByLabel('Hidden network', { exact: true }).check();
   await settle(page);
   await expect(page.getByRole('status')).toContainText('Your QR code is ready');
-  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await capture(page, info, 'cleared-from-wifi');
   const text = page.getByRole('textbox', { name: 'Link or text' });
   await expect(page.locator('#content-type')).toHaveValue('text');
@@ -489,7 +491,7 @@ test('all PNG sizes and content capacity', async ({ page }) => {
     .fill('a'.repeat(2001));
   await page.locator('#content').blur();
   await settle(page);
-  await expect(page.getByRole('status')).toContainText('too long');
+  await expect(page.locator('#content-error')).toContainText('too long');
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
   ).toBeDisabled();
@@ -513,7 +515,7 @@ test('keyboard, native selection and touch work without hover', async ({
     await expect(page.getByRole('status')).toContainText(
       'Your QR code is ready',
     );
-    await page.getByRole('button', { name: 'Clear', exact: true }).tap();
+    await page.getByRole('button', { name: 'Clear all', exact: true }).tap();
     await expect(
       page.getByLabel('Link or text', { exact: true }),
     ).toBeFocused();
@@ -537,7 +539,7 @@ test('keyboard, native selection and touch work without hover', async ({
     await expect(page.locator('#password')).toBeDisabled();
     await capture(page, info, 'custom-select-keyboard');
     const box = await page
-      .getByRole('button', { name: 'Clear', exact: true })
+      .getByRole('button', { name: 'Clear all', exact: true })
       .boundingBox();
     assert(box);
     expect(box.height).toBeGreaterThanOrEqual(44);
@@ -692,7 +694,7 @@ test('a changed input cannot be restored by an older PNG callback', async ({
   await expect(page.locator('#qr-form')).toHaveAttribute('aria-busy', 'true');
   await page.getByRole('textbox', { name: 'Link or text' }).fill('new payload');
   await expect(
-    page.getByRole('button', { name: 'Clear', exact: true }),
+    page.getByRole('button', { name: 'Clear all', exact: true }),
   ).toBeEnabled();
   await expect(
     page.getByRole('button', { name: 'Download PNG', exact: true }),
@@ -733,7 +735,7 @@ test('PNG failure recovers without leaving an old download enabled', async ({
     'PNG could not be created',
   );
   await expect(
-    page.getByRole('button', { name: 'Clear', exact: true }),
+    page.getByRole('button', { name: 'Clear all', exact: true }),
   ).toBeEnabled();
   await expect(
     page.getByRole('button', { name: 'Download SVG', exact: true }),
@@ -751,7 +753,7 @@ test('motion reverses promptly and respects reduced preference', async ({
 }, info) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(app.url);
-  const button = page.getByRole('button', { name: 'Clear', exact: true });
+  const button = page.getByRole('button', { name: 'Clear all', exact: true });
   await button.hover();
   await capture(page, info, 'hover-start', false);
   await page.waitForTimeout(80);
@@ -901,7 +903,7 @@ for (const viewport of standardViewports)
             page.getByRole('img', { name: 'Generated QR code' }),
           ).toBeHidden();
           await page
-            .getByRole('button', { name: 'Clear', exact: true })
+            .getByRole('button', { name: 'Clear all', exact: true })
             .click();
           await expect(page.locator('#content-type')).toHaveValue('text');
           await expect(
@@ -1034,7 +1036,9 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     .getByRole('textbox', { name: 'Link or text' })
     .fill('a'.repeat(100));
   await settle(page);
-  await expect(page.getByRole('status')).toContainText('needs version');
+  await expect(page.locator('#qr-version-error')).toContainText(
+    'needs version',
+  );
   await expect(page.locator('#content')).toBeFocused();
   await capture(page, info, 'version-too-small');
   await chooseSelect(page.getByLabel('QR version', { exact: true }), 'auto');
@@ -1044,24 +1048,21 @@ test('advanced options validate capacity, invalidate every setting and reset to 
     .fill('a'.repeat(1274));
   await page.getByText('Advanced settings', { exact: true }).click();
   await settle(page);
-  await expect(page.getByRole('status')).toContainText(
+  await expect(page.locator('#error-correction-error')).toContainText(
     'will not fit at level H',
   );
-  await expect(page.locator('#advanced-settings')).not.toHaveAttribute(
-    'open',
-    '',
-  );
+  await expect(page.locator('#advanced-settings')).toHaveAttribute('open', '');
+  await expect(page.locator('#error-correction-error')).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Download SVG', exact: true }),
   ).toBeDisabled();
   await capture(page, info, 'correction-capacity-error');
-  await page.getByText('Advanced settings', { exact: true }).click();
   await chooseSelect(page.getByLabel('Error correction', { exact: true }), 'M');
   await generate(page, 'Recovered settings');
   expect(decodePng(await download(page, 'PNG')).text).toBe(
     'Recovered settings',
   );
-  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await expect(page.locator('#advanced-settings')).not.toHaveAttribute(
     'open',
     '',
@@ -1096,7 +1097,9 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await expect(
     page.getByLabel('Start time', { exact: true }),
   ).not.toBeFocused();
-  await expect(page.getByRole('status')).toContainText('Choose a time');
+  await expect(page.locator('#event-start-time-error')).toContainText(
+    'Choose a time',
+  );
   await page.getByLabel('Start time', { exact: true }).fill('09:00');
   await page.getByLabel('End time', { exact: true }).fill('10:00');
   await page.getByLabel('All-day event', { exact: true }).check();
@@ -1115,7 +1118,7 @@ test('calendar all-day, inclusive end, timezone and errors remain local', async 
   await page.getByLabel('End date', { exact: true }).fill('2026-12-30');
   await page.locator('#event-end').blur();
   await settle(page);
-  await expect(page.getByRole('status')).toContainText(
+  await expect(page.locator('#event-end-error')).toContainText(
     'last day must be on or after',
   );
   await expect(page.getByLabel('End date', { exact: true })).not.toBeFocused();
@@ -1172,9 +1175,9 @@ test('automatic validation preserves optional disclosures and a changed type can
   await expect(
     page.getByLabel('Website if needed', { exact: true }),
   ).not.toBeFocused();
-  await expect(page.locator('#contact-more')).not.toHaveAttribute('open', '');
-  await expect(page.getByRole('status')).toContainText('http');
-  await page.getByText('More contact details', { exact: true }).click();
+  await expect(page.locator('#contact-more')).toHaveAttribute('open', '');
+  await expect(page.locator('#contact-website-error')).toBeVisible();
+  await expect(page.locator('#contact-website-error')).toContainText('http');
   await expect(
     page.getByLabel('Website if needed', { exact: true }),
   ).toHaveValue('javascript:alert(1)');
@@ -1245,7 +1248,9 @@ test('oversized structured content marks its field without focus changes or leak
     await page.locator('#' + large).blur();
     if (more) await page.getByText(more, { exact: true }).click();
     await settle(page);
-    await expect(page.getByRole('status')).toContainText('too long');
+    await expect(page.locator('#' + large + '-error')).toContainText(
+      'too long',
+    );
     await expect(page.locator('#' + large)).not.toBeFocused();
     await expect(page.locator('#' + large)).toHaveAttribute(
       'aria-invalid',
@@ -1258,7 +1263,7 @@ test('oversized structured content marks its field without focus changes or leak
     await expect(
       page.getByRole('button', { name: 'Download PNG', exact: true }),
     ).toBeDisabled();
-    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await page.getByRole('button', { name: 'Clear all', exact: true }).click();
     await expect(page.locator('#content-type')).toHaveValue('text');
   }
 });
@@ -1369,7 +1374,9 @@ for (const theme of ['light', 'dark'] as const) {
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
       expect(axe.violations).toEqual([]);
-      await page.getByRole('button', { name: 'Clear', exact: true }).click();
+      await page
+        .getByRole('button', { name: 'Clear all', exact: true })
+        .click();
       await expect(page.locator('#content-type')).toHaveValue('text');
       await expect(page.locator('#content-type-control')).toHaveText(
         'URL or text',

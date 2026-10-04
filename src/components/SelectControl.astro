@@ -1,5 +1,6 @@
 ---
 import { ChevronDown } from '@lucide/astro';
+import FieldError from './FieldError.astro';
 interface Props {
   id: string;
   label: string;
@@ -8,6 +9,12 @@ interface Props {
   timeFor?: string;
 }
 const { id, label, valueLabel, describedby, timeFor } = Astro.props;
+const descriptions = [
+  id + '-error',
+  ...(describedby ?? '')
+    .split(/\s+/u)
+    .filter((value) => value && value !== 'form-status'),
+].join(' ');
 ---
 
 <select
@@ -15,7 +22,7 @@ const { id, label, valueLabel, describedby, timeFor } = Astro.props;
   hidden
   data-custom-select
   data-time-for={timeFor}
-  aria-describedby={describedby}
+  aria-describedby={descriptions}
 >
   <slot />
 </select>
@@ -28,10 +35,11 @@ const { id, label, valueLabel, describedby, timeFor } = Astro.props;
   aria-haspopup="listbox"
   aria-expanded="false"
   aria-controls={id + '-options'}
-  aria-describedby={describedby}
+  aria-describedby={descriptions}
   disabled
 >
   <span data-control-value>{valueLabel}</span>
   <ChevronDown size={20} aria-hidden="true" data-control-indicator />
 </button>
 <div id={id + '-options'} class="select-options" hidden></div>
+<FieldError id={id} />

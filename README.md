@@ -49,6 +49,7 @@ The production preview uses an automatically selected loopback port through `npm
 - [Tests and verification boundaries](tests/README.md)
 - [Content expansion audit](docs/audits/2026-10-03-content-types.md)
 - [Automatic input verification](docs/audits/automatic-input-2026-10-04.md)
+- [Inline errors and Clear all verification](docs/audits/inline-errors-clear-2026-10-04.md)
 - [Source and artwork rights](LICENSE_STATUS.md) and [third-party notices](THIRD_PARTY_NOTICES.md)
 
 The interface uses reviewed English and Vietnamese, local Space Grotesk and VINASIG's adopted design tokens. QR exports use standard Model 2, are black on white, keep at least a four-module quiet zone and contain no VINASIG logo, watermark or remote resources. PNG modules use integer pixel sizes. Error correction defaults to M. Content is limited to 2,000 UTF-8 bytes and must fit its selected correction level and version. Higher correction can require a denser code; an explicit version that is too small produces a correction rather than a broken export.

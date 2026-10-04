@@ -78,7 +78,7 @@ for (const lang of ['en', 'vi'] as const)
         await expect(page.locator('#content')).toBeFocused();
         expect(await page.evaluate(() => scrollY)).toBe(scroll);
         expect(await page.evaluate(inspectInterface)).toEqual([]);
-        const folder = 'output/responsive/automatic-input-2026-10-04/after';
+        const folder = `output/responsive/${process.env['CAPTURE_RUN'] ?? 'automatic-input-2026-10-04'}/after`;
         await mkdir(folder, { recursive: true });
         await page.evaluate(async () => {
           await document.fonts.ready;

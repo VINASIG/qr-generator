@@ -170,7 +170,7 @@ legend {
   margin-bottom: 0.5rem;
 }
 
-details p {
+details :where(p:not(.field-error)) {
   margin: 0 0 1rem;
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
@@ -273,6 +273,21 @@ textarea[aria-invalid='true'] {
   margin: 0.5rem 0 0;
 }
 
+.field-error {
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+  margin: 0.5rem 0 1rem;
+  overflow-wrap: anywhere;
+}
+
+.field > .field-error {
+  margin-bottom: 0;
+}
+
+.fields > input:has(+ .field-error:not([hidden])) {
+  margin-bottom: 0;
+}
+
 .advanced-settings {
   margin-top: 1.5rem;
 }
@@ -334,6 +349,19 @@ textarea[aria-invalid='true'] {
 .quiet {
   background: transparent;
   color: var(--color-text-muted);
+}
+
+.clear-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-info);
+  border-color: var(--color-info);
+}
+
+.clear-button svg {
+  flex-shrink: 0;
 }
 
 .status {

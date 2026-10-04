@@ -5,7 +5,8 @@ import SitePreferences from '../components/SitePreferences.astro';
 import Localized from '../components/Localized.astro';
 import dictionary from '../locales/vi.json';
 import { translateCopy } from '../lib/localization.ts';
-import { Download, QrCode } from '@lucide/astro';
+import { Download, QrCode, Trash } from '@lucide/astro';
+import FieldError from '../components/FieldError.astro';
 import ContentFields from '../components/ContentFields.astro';
 import '../styles/tokens.css';
 import '../styles/app.css';
@@ -185,8 +186,9 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                     required
                     spellcheck="false"
                     autocomplete="off"
-                    aria-describedby="content-help form-status"
+                    aria-describedby="content-error content-help"
                   ></textarea>
+                  <FieldError id="content" />
                   <p id="content-help" class="supporting">
                     Paste the complete link, or enter any text. We keep it
                     exactly as entered.
@@ -207,18 +209,21 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                     autocomplete="off"
                     required
                     spellcheck="false"
-                    aria-describedby="form-status"
+                    aria-describedby="ssid-error"
                   />
-                  <label for="security-control">Security</label>
-                  <SelectControl
-                    id="security"
-                    label="Security"
-                    valueLabel="WPA or WPA2"
-                  >
-                    <option value="WPA">WPA or WPA2</option>
-                    <option value="WEP">WEP</option>
-                    <option value="nopass">Open network</option>
-                  </SelectControl>
+                  <FieldError id="ssid" />
+                  <div class="field">
+                    <label for="security-control">Security</label>
+                    <SelectControl
+                      id="security"
+                      label="Security"
+                      valueLabel="WPA or WPA2"
+                    >
+                      <option value="WPA">WPA or WPA2</option>
+                      <option value="WEP">WEP</option>
+                      <option value="nopass">Open network</option>
+                    </SelectControl>
+                  </div>
                   <div id="password-fields" class="fields">
                     <label for="password">Password</label>
                     <input
@@ -226,8 +231,9 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                       type="password"
                       autocomplete="new-password"
                       spellcheck="false"
-                      aria-describedby="wifi-help form-status"
+                      aria-describedby="password-error wifi-help"
                     />
+                    <FieldError id="password" />
                     <label class="check-label">
                       <input id="show-password" type="checkbox" /> Show password
                     </label>
@@ -336,8 +342,9 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                   Check entered content
                 </button>
                 <div class="form-actions">
-                  <button id="clear" class="quiet" type="reset" disabled>
-                    Clear
+                  <button id="clear" class="clear-button" type="reset" disabled>
+                    <Trash size={18} aria-hidden="true" />
+                    <span>Clear all</span>
                   </button>
                 </div>
                 <p

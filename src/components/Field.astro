@@ -1,6 +1,7 @@
 ---
 import DateInput from './DateInput.astro';
 import SelectControl from './SelectControl.astro';
+import FieldError from './FieldError.astro';
 interface Props {
   id: string;
   label: string;
@@ -24,7 +25,10 @@ const {
   inputmode = 'text',
 } = Astro.props;
 const describedby =
-  (help ? id + '-help ' : '') + (helpIds ? helpIds + ' ' : '') + 'form-status';
+  id +
+  '-error' +
+  (help ? ' ' + id + '-help' : '') +
+  (helpIds ? ' ' + helpIds : '');
 ---
 
 <div class="field">
@@ -81,9 +85,6 @@ const describedby =
           </SelectControl>
         </div>
       </div>
-      <p class="supporting">
-        Enter hours and minutes, for example 09:30. You can enter any minute.
-      </p>
     </>
   ) : (
     <input
@@ -96,6 +97,12 @@ const describedby =
       autocomplete="off"
       aria-describedby={describedby}
     />
+  )}
+  {type !== 'date' && <FieldError id={id} />}
+  {type === 'time' && (
+    <p class="supporting">
+      Enter hours and minutes, for example 09:30. You can enter any minute.
+    </p>
   )}
   {help && (
     <p id={id + '-help'} class="supporting">

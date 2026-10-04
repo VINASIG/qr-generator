@@ -1,11 +1,28 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { translateHtml, translateCopy } from '../src/lib/localization.ts';
+import { interfaceCopy } from '../src/lib/interface-copy.ts';
 const dictionary = {
   'Hello & goodbye': 'Xin chào và tạm biệt',
   Copy: 'Sao chép',
   'A quotation': 'Một dấu " và <tag>',
 };
+await test('email input guidance uses familiar language in both locales', () => {
+  const technical =
+    'Use one email address with an unquoted ASCII name before @.';
+  assert.equal(
+    interfaceCopy(technical, false),
+    'Enter a valid email address, for example hello@example.com. Use letters without accents before @.',
+  );
+  assert.equal(
+    interfaceCopy(technical, true),
+    'Nhập địa chỉ email hợp lệ, ví dụ hello@example.com. Dùng chữ không dấu trước @.',
+  );
+  assert.equal(
+    interfaceCopy('Check the highlighted field.', true),
+    'Kiểm tra ô được đánh dấu.',
+  );
+});
 await test('authored copy handles entities, spacing and escaped attributes', () => {
   assert.equal(
     translateCopy('  Hello &amp; goodbye  ', dictionary),
