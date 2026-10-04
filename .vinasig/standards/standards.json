@@ -153,7 +153,7 @@
       "level": "MUST",
       "summary": "Source design and transparent header artwork; settled font/icon roles",
       "verification": ["automatic", "agent", "human"],
-      "evidence": "Original asset digests, actual header surfaces and variants, transparent presentation, target geometry, screenshots and adoption record",
+      "evidence": "Original asset digests, actual header surfaces and variants, transparent presentation, homepage destination, localized link name, target geometry, local/live screenshots and adoption record",
       "exceptions": "Record approved product exceptions; unavailable applicable checks are NOT_RUN; distinguish emulation."
     },
     {

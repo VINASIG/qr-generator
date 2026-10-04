@@ -279,6 +279,12 @@ export function inspectHeaderBrand() {
   if (!link) return findings;
   if (!(link instanceof HTMLAnchorElement) || !link.href)
     add(link, 'header-logo-link', 'Use a named logo link');
+  else if (link.href !== 'https://vinasig.io.vn/')
+    add(
+      link,
+      'header-logo-home',
+      'The VINASIG logo must link to https://vinasig.io.vn/',
+    );
   const image = link.querySelector('img');
   if (!image || !image.complete || image.naturalWidth === 0) {
     add(link, 'header-logo-image', 'The supplied image must load');
