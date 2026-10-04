@@ -13,7 +13,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await app.close();
 });
-for (const route of [''])
+for (const route of ['', 'vi/'])
   for (const theme of ['light', 'dark'] as const)
     for (const [width, height] of [
       [320, 800],

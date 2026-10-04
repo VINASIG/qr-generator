@@ -7,8 +7,11 @@ import { startServer } from './serve.ts';
 import { repositoryRoot, writeOutput } from './local.ts';
 
 const phase = process.argv.includes('--baseline') ? 'before' : 'after';
+const language = process.argv.includes('--vietnamese') ? 'vi' : 'en';
+const reportDirectory = `output/lighthouse/${phase}${language === 'vi' ? '/vi' : ''}`;
 const root = path.join(repositoryRoot, 'dist');
 const app = await startServer(root);
+const pageURL = new URL(language === 'vi' ? 'vi/' : '', app.url).href;
 const reservation = createServer();
 await new Promise<void>((resolve) => {
   reservation.listen(0, '127.0.0.1', resolve);
@@ -78,7 +81,7 @@ try {
         },
         throttlingMethod: 'simulate' as const,
       };
-      const result = record(await lighthouse(app.url, flags));
+      const result = record(await lighthouse(pageURL, flags));
       const lhr = record(result['lhr']);
       const audits = record(lhr['audits']);
       const categories = record(lhr['categories']);
@@ -109,7 +112,7 @@ try {
         assert(typeof contents === 'string');
         await writeOutput(
           repositoryRoot,
-          `output/lighthouse/${phase}/${formFactor}-${String(run)}.${extension}`,
+          `${reportDirectory}/${formFactor}-${String(run)}.${extension}`,
           contents,
         );
       }
@@ -143,7 +146,7 @@ try {
   });
   await writeOutput(
     repositoryRoot,
-    `output/lighthouse/${phase}/summary.json`,
+    `${reportDirectory}/summary.json`,
     `${JSON.stringify({ status: 'PASS', phase, environment: { browser: chromium.executablePath().split(path.sep).slice(-3).join('/'), node: process.version, cache: 'Lighthouse default cold navigation', network: 'simulated mobile 150 ms / 1.6 Mbps / 4x CPU; desktop 40 ms / 10 Mbps / 1x CPU', viewport: '390x844 and 1440x900', fieldMetrics: 'NOT_RUN' }, metrics, summaries }, null, 2)}\n`,
   );
   console.log(JSON.stringify(summaries));

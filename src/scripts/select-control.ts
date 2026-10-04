@@ -62,7 +62,8 @@ export function installSelects(root: ParentNode = document): void {
       trigger.setAttribute('aria-labelledby', labelIds);
       panel.setAttribute(
         'aria-label',
-        labels.map((label) => label.textContent.trim()).join(' ') + ' options',
+        labels.map((label) => label.textContent.trim()).join(' ') +
+          (document.documentElement.lang === 'vi' ? ' - lựa chọn' : ' options'),
       );
     } else {
       trigger.setAttribute(

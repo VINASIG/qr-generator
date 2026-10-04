@@ -50,7 +50,7 @@ The production preview uses an automatically selected loopback port through `npm
 - [Content expansion audit](docs/audits/2026-10-03-content-types.md)
 - [Source and artwork rights](LICENSE_STATUS.md) and [third-party notices](THIRD_PARTY_NOTICES.md)
 
-The interface uses English, local Space Grotesk and VINASIG's adopted design tokens. QR exports use standard Model 2, are black on white, keep at least a four-module quiet zone and contain no VINASIG logo, watermark or remote resources. PNG modules use integer pixel sizes. Error correction defaults to M. Content is limited to 2,000 UTF-8 bytes and must fit its selected correction level and version. Higher correction can require a denser code; an explicit version that is too small produces a correction rather than a broken export.
+The interface uses reviewed English and Vietnamese, local Space Grotesk and VINASIG's adopted design tokens. QR exports use standard Model 2, are black on white, keep at least a four-module quiet zone and contain no VINASIG logo, watermark or remote resources. PNG modules use integer pixel sizes. Error correction defaults to M. Content is limited to 2,000 UTF-8 bytes and must fit its selected correction level and version. Higher correction can require a denser code; an explicit version that is too small produces a correction rather than a broken export.
 
 Screen-based decoder tests do not replace a scan from the final physical print. Test the final size, contrast and viewing distance on the devices your audience uses.
 
@@ -65,3 +65,7 @@ The public site uses [qr.vinasig.io.vn](https://qr.vinasig.io.vn/) at the origin
 VINASIG-authored software uses **AGPL-3.0-or-later**. Authored documentation uses **CC-BY-SA-4.0**. Commercial use is allowed under those standard licenses. Fonts and third-party components retain their original terms. Official VINASIG identity assets follow the separate brand policy.
 
 Read [LICENSE](LICENSE), [LICENSES.md](LICENSES.md), [VINASIG Brand Usage Policy](BRAND_POLICY.md) and [the licensing review](docs/audits/licensing-2026-10-04.md) for exact scopes, rationale and remaining review.
+
+## Languages and appearance
+
+English `/` and Vietnamese `/vi/` provide the same features with localized navigation, guidance and accessible controls. Use the compact EN or VI link and adjacent theme button. Only an explicit appearance preference is stored. Inputs and files remain local and unsaved. See [localization maintenance](docs/LOCALIZATION.md).

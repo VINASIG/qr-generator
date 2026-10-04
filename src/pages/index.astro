@@ -1,5 +1,10 @@
 ---
 import SelectControl from '../components/SelectControl.astro';
+import ThemeInit from '../components/ThemeInit.astro';
+import SitePreferences from '../components/SitePreferences.astro';
+import Localized from '../components/Localized.astro';
+import dictionary from '../locales/vi.json';
+import { translateCopy } from '../lib/localization.ts';
 import { Download, QrCode } from '@lucide/astro';
 import ContentFields from '../components/ContentFields.astro';
 import '../styles/tokens.css';
@@ -11,27 +16,41 @@ const base = configuredBase.endsWith('/')
   ? configuredBase
   : configuredBase + '/';
 const asset = (name: string) => base + name;
+const lang = Astro.url.pathname.includes('/vi/') ? 'vi' : 'en';
+const t = (value: string) =>
+  lang === 'vi' ? translateCopy(value, dictionary) : value;
+const root = 'https://qr.vinasig.io.vn/';
+const canonical = root + (lang === 'vi' ? 'vi/' : '');
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
+    <ThemeInit />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VINASIG QR Generator - Static QR codes, no signup</title>
+    <title>{t('VINASIG QR Generator - Static QR codes, no signup')}</title>
     <meta
       name="description"
-      content="Create static QR codes for links, Wi-Fi, email, SMS, contacts, locations and events. Choose error correction and download PNG or SVG. No account or redirect."
+      content={t(
+        'Create static QR codes for links, Wi-Fi, email, SMS, contacts, locations and events. Choose error correction and download PNG or SVG. No account or redirect.',
+      )}
     />
     <meta name="theme-color" content="#f7f6f4" />
-    <link rel="canonical" href="https://qr.vinasig.io.vn/" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={root} />
+    <link rel="alternate" hreflang="vi" href={`${root}vi/`} />
+    <link rel="alternate" hreflang="x-default" href={root} />
+    <meta property="og:locale" content={lang === 'vi' ? 'vi_VN' : 'en_US'} />
     <meta property="og:title" content="VINASIG QR Generator" />
     <meta
       property="og:description"
-      content="Traditional QR codes. Your content goes directly into the code. Download PNG or SVG."
+      content={t(
+        'Traditional QR codes. Your content goes directly into the code. Download PNG or SVG.',
+      )}
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://qr.vinasig.io.vn/" />
+    <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     <link rel="icon" type="image/svg+xml" href={asset('brand/mark.svg')} />
     <link
@@ -66,422 +85,451 @@ const asset = (name: string) => base + name;
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
         name: 'VINASIG QR Generator',
-        url: 'https://qr.vinasig.io.vn/',
+        url: canonical,
+        inLanguage: lang,
         applicationCategory: 'UtilitiesApplication',
         operatingSystem: 'Web browser',
-        description:
+        description: t(
           'Create static QR codes for links, text, Wi-Fi, email, phone, SMS, vCard contacts, locations and calendar events locally. Adjust error correction and download PNG or SVG without an account.',
+        ),
       })}
     />
   </head>
   <body>
-    <a class="skip-link" href="#main">
-      Skip to generator
-    </a>
-    <div class="app-shell">
-      <header class="site-header">
-        <a
-          class="brand"
-          href="https://github.com/VINASIG"
-          aria-label="VINASIG on GitHub"
-          data-brand-logo
-        >
-          <picture>
-            <source
-              media="(prefers-color-scheme: dark)"
-              srcset={asset('brand/reversed.svg')}
-            />
-            <img
-              src={asset('brand/primary-color.svg')}
-              width="540"
-              height="140"
-              alt="VINASIG"
-            />
-          </picture>
-        </a>
-        <a href="https://github.com/VINASIG/qr-generator">View source</a>
-      </header>
-      <main id="main" tabindex="-1">
-        <div class="intro">
-          <h1>QR Generator</h1>
-          <p class="lead">Your content. Straight into a QR code.</p>
-          <p>Create it here, keep it yours. No account or tracking redirect.</p>
-        </div>
-        <div class="workspace">
-          <section class="editor" aria-labelledby="content-heading">
-            <h2 id="content-heading">Create your code</h2>
-            <form id="qr-form" novalidate>
-              <div class="field content-type">
-                <label for="content-type-control">Content type</label>
-                <SelectControl
-                  id="content-type"
-                  label="Content type"
-                  valueLabel="URL or text"
-                >
-                  <option value="text" selected>
-                    URL or text
-                  </option>
-                  <option value="wifi">Wi-Fi</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone call</option>
-                  <option value="sms">SMS</option>
-                  <option value="contact">Contact</option>
-                  <option value="location">Location</option>
-                  <option value="event">Calendar</option>
-                  <option value="file">File link</option>
-                </SelectControl>
-              </div>
-              <fieldset
-                id="text-fields"
-                class="fields"
-                data-content-type="text"
-              >
-                <legend class="visually-hidden">URL or text details</legend>
-                <label for="content">Link or text</label>
-                <textarea
-                  id="content"
-                  rows="4"
-                  placeholder="For example https://example.com"
-                  required
-                  spellcheck="false"
-                  autocomplete="off"
-                  aria-describedby="content-help form-status"
-                ></textarea>
-                <p id="content-help" class="supporting">
-                  Paste the complete link, or enter any text. We keep it exactly
-                  as entered.
-                </p>
-              </fieldset>
-              <fieldset
-                id="wifi-fields"
-                class="fields"
-                data-content-type="wifi"
-                hidden
-                disabled
-              >
-                <legend class="visually-hidden">Wi-Fi details</legend>
-                <label for="ssid">Network name</label>
-                <input
-                  id="ssid"
-                  type="text"
-                  autocomplete="off"
-                  required
-                  spellcheck="false"
-                  aria-describedby="form-status"
-                />
-                <label for="security-control">Security</label>
-                <SelectControl
-                  id="security"
-                  label="Security"
-                  valueLabel="WPA or WPA2"
-                >
-                  <option value="WPA">WPA or WPA2</option>
-                  <option value="WEP">WEP</option>
-                  <option value="nopass">Open network</option>
-                </SelectControl>
-                <div id="password-fields" class="fields">
-                  <label for="password">Password</label>
-                  <input
-                    id="password"
-                    type="password"
-                    autocomplete="new-password"
-                    spellcheck="false"
-                    aria-describedby="wifi-help form-status"
-                  />
-                  <label class="check-label">
-                    <input id="show-password" type="checkbox" /> Show password
-                  </label>
-                </div>
-                <label class="check-label">
-                  <input id="hidden-network" type="checkbox" /> Hidden network
-                </label>
-                <p id="wifi-help" class="supporting">
-                  WPA or WPA2 is for personal networks. Anyone with this code
-                  can read its Wi-Fi details. Keep the downloaded image private
-                  when needed.
-                </p>
-              </fieldset>
-              <ContentFields />
-              <details id="advanced-settings" class="advanced-settings">
-                <summary>Advanced settings</summary>
-                <div class="advanced-controls">
-                  <div class="field">
-                    <label for="error-correction-control">
-                      Error correction
-                    </label>
-                    <SelectControl
-                      id="error-correction"
-                      label="Error correction"
-                      valueLabel="Medium - M - 15%"
-                      describedby="correction-help form-status"
-                    >
-                      <option value="L">Low - L - 7%</option>
-                      <option value="M" selected>
-                        Medium - M - 15%
-                      </option>
-                      <option value="Q">Quartile - Q - 25%</option>
-                      <option value="H">High - H - 30%</option>
-                    </SelectControl>
-                  </div>
-                  <div class="field">
-                    <label for="quiet-zone-control">White border</label>
-                    <SelectControl
-                      id="quiet-zone"
-                      label="White border"
-                      valueLabel="4 modules"
-                      describedby="form-status"
-                    >
-                      <option value="4" selected>
-                        4 modules
-                      </option>
-                      <option value="8">8 modules</option>
-                      <option value="12">12 modules</option>
-                    </SelectControl>
-                  </div>
-                </div>
-                <p id="correction-help" class="supporting">
-                  M is the default for everyday use. Q or H adds recovery for
-                  dirt or damage, but can make the pattern denser. Approximate
-                  recovery rates refer to codewords, not an area you can cover.
-                  Keep the white border of at least four modules and test your
-                  print.
-                </p>
-                <div class="advanced-controls">
-                  <div class="field">
-                    <label for="qr-version-control">QR version</label>
-                    <SelectControl
-                      id="qr-version"
-                      label="QR version"
-                      valueLabel="Auto"
-                      describedby="structure-help form-status"
-                    >
-                      <option value="auto" selected>
-                        Auto
-                      </option>
-                      {Array.from({ length: 40 }, (_, i) => (
-                        <option value={i + 1}>{i + 1}</option>
-                      ))}
-                    </SelectControl>
-                  </div>
-                  <div class="field">
-                    <label for="mask-pattern-control">Mask pattern</label>
-                    <SelectControl
-                      id="mask-pattern"
-                      label="Mask pattern"
-                      valueLabel="Auto"
-                      describedby="structure-help form-status"
-                    >
-                      <option value="auto" selected>
-                        Auto
-                      </option>
-                      {Array.from({ length: 8 }, (_, i) => (
-                        <option value={i}>{i}</option>
-                      ))}
-                    </SelectControl>
-                  </div>
-                </div>
-                <p id="structure-help" class="supporting">
-                  Leave version and mask on Auto unless a specification requires
-                  them. Auto selects the smallest version that fits. Versions
-                  1-40 control the module grid. Masks 0-7 change its pattern,
-                  not its content. Content is limited to 2,000 UTF-8 bytes, and
-                  must also fit the selected version and correction level.
-                </p>
-              </details>
-              <div class="form-actions">
-                <button id="generate" class="primary" type="submit" disabled>
-                  Create QR code
-                </button>
-                <button id="clear" class="quiet" type="reset">
-                  Clear
-                </button>
-              </div>
-              <p
-                id="form-status"
-                class="status supporting"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                Your content stays in this browser.
-              </p>
-            </form>
-            <noscript>
-              <p>
-                Enable JavaScript to create a QR code locally in your browser.
-              </p>
-            </noscript>
-          </section>
-          <section
-            id="preview-panel"
-            class="preview"
-            aria-labelledby="preview-heading"
-            tabindex="-1"
+    <Localized lang={lang}>
+      <a class="skip-link" href="#main">
+        Skip to generator
+      </a>
+      <div class="app-shell">
+        <header class="site-header">
+          <a
+            class="brand"
+            href="https://github.com/VINASIG"
+            aria-label="VINASIG on GitHub"
+            data-brand-logo
           >
-            <h2 id="preview-heading">Your QR code</h2>
-            <div class="qr-stage">
-              <div id="empty-preview" class="empty-preview">
-                <QrCode size={40} stroke-width={1.5} aria-hidden="true" />
-                <p>Your code will appear here.</p>
-              </div>
-              <img
-                id="qr-image"
-                src={asset('brand/mark.svg')}
-                width="280"
-                height="280"
-                alt="Generated QR code"
-                hidden
+            <picture>
+              <source
+                media="(prefers-color-scheme: dark)"
+                srcset={asset('brand/reversed.svg')}
               />
-            </div>
-            <div class="export-size">
-              <label for="image-size-control">PNG size</label>
-              <SelectControl
-                id="image-size"
-                label="PNG size"
-                valueLabel="1024 pixels"
-              >
-                <option value="512">512 pixels</option>
-                <option value="1024" selected>
-                  1024 pixels
-                </option>
-                <option value="2048">2048 pixels</option>
-              </SelectControl>
-            </div>
-            <div class="download-actions">
-              <button id="download-png" class="primary" type="button" disabled>
-                <Download size={18} aria-hidden="true" />
-                Download PNG
-              </button>
-              <button
-                id="download-svg"
-                class="secondary"
-                type="button"
-                disabled
-              >
-                <Download size={18} aria-hidden="true" />
-                Download SVG
-              </button>
-            </div>
-            <p class="supporting export-help">
-              PNG for everyday use. SVG stays sharp at any print size.
+              <script is:inline>
+                document.currentScript?.previousElementSibling?.setAttribute(
+                  'media',
+                  document.documentElement.dataset.theme === 'dark'
+                    ? 'all'
+                    : 'not all',
+                );
+              </script>
+              <img
+                src={asset('brand/primary-color.svg')}
+                width="540"
+                height="140"
+                alt="VINASIG"
+              />
+            </picture>
+          </a>
+          <div class="header-actions">
+            <a href="https://github.com/VINASIG/qr-generator">View source</a>
+            <SitePreferences
+              lang={lang}
+              alternate={lang === 'vi' ? base : `${base}vi/`}
+            />
+          </div>
+        </header>
+        <main id="main" tabindex="-1">
+          <div class="intro">
+            <h1>QR Generator</h1>
+            <p class="lead">Your content. Straight into a QR code.</p>
+            <p>
+              Create it here, keep it yours. No account or tracking redirect.
             </p>
-            <details id="encoded-details" hidden>
-              <summary>Encoded content</summary>
-              <p data-user-content id="encoded-content"></p>
+          </div>
+          <div class="workspace">
+            <section class="editor" aria-labelledby="content-heading">
+              <h2 id="content-heading">Create your code</h2>
+              <form id="qr-form" novalidate>
+                <div class="field content-type">
+                  <label for="content-type-control">Content type</label>
+                  <SelectControl
+                    id="content-type"
+                    label="Content type"
+                    valueLabel="URL or text"
+                  >
+                    <option value="text" selected>
+                      URL or text
+                    </option>
+                    <option value="wifi">Wi-Fi</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone call</option>
+                    <option value="sms">SMS</option>
+                    <option value="contact">Contact</option>
+                    <option value="location">Location</option>
+                    <option value="event">Calendar</option>
+                    <option value="file">File link</option>
+                  </SelectControl>
+                </div>
+                <fieldset
+                  id="text-fields"
+                  class="fields"
+                  data-content-type="text"
+                >
+                  <legend class="visually-hidden">URL or text details</legend>
+                  <label for="content">Link or text</label>
+                  <textarea
+                    id="content"
+                    rows="4"
+                    placeholder="For example https://example.com"
+                    required
+                    spellcheck="false"
+                    autocomplete="off"
+                    aria-describedby="content-help form-status"
+                  ></textarea>
+                  <p id="content-help" class="supporting">
+                    Paste the complete link, or enter any text. We keep it
+                    exactly as entered.
+                  </p>
+                </fieldset>
+                <fieldset
+                  id="wifi-fields"
+                  class="fields"
+                  data-content-type="wifi"
+                  hidden
+                  disabled
+                >
+                  <legend class="visually-hidden">Wi-Fi details</legend>
+                  <label for="ssid">Network name</label>
+                  <input
+                    id="ssid"
+                    type="text"
+                    autocomplete="off"
+                    required
+                    spellcheck="false"
+                    aria-describedby="form-status"
+                  />
+                  <label for="security-control">Security</label>
+                  <SelectControl
+                    id="security"
+                    label="Security"
+                    valueLabel="WPA or WPA2"
+                  >
+                    <option value="WPA">WPA or WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">Open network</option>
+                  </SelectControl>
+                  <div id="password-fields" class="fields">
+                    <label for="password">Password</label>
+                    <input
+                      id="password"
+                      type="password"
+                      autocomplete="new-password"
+                      spellcheck="false"
+                      aria-describedby="wifi-help form-status"
+                    />
+                    <label class="check-label">
+                      <input id="show-password" type="checkbox" /> Show password
+                    </label>
+                  </div>
+                  <label class="check-label">
+                    <input id="hidden-network" type="checkbox" /> Hidden network
+                  </label>
+                  <p id="wifi-help" class="supporting">
+                    WPA or WPA2 is for personal networks. Anyone with this code
+                    can read its Wi-Fi details. Keep the downloaded image
+                    private when needed.
+                  </p>
+                </fieldset>
+                <ContentFields />
+                <details id="advanced-settings" class="advanced-settings">
+                  <summary>Advanced settings</summary>
+                  <div class="advanced-controls">
+                    <div class="field">
+                      <label for="error-correction-control">
+                        Error correction
+                      </label>
+                      <SelectControl
+                        id="error-correction"
+                        label="Error correction"
+                        valueLabel="Medium - M - 15%"
+                        describedby="correction-help form-status"
+                      >
+                        <option value="L">Low - L - 7%</option>
+                        <option value="M" selected>
+                          Medium - M - 15%
+                        </option>
+                        <option value="Q">Quartile - Q - 25%</option>
+                        <option value="H">High - H - 30%</option>
+                      </SelectControl>
+                    </div>
+                    <div class="field">
+                      <label for="quiet-zone-control">White border</label>
+                      <SelectControl
+                        id="quiet-zone"
+                        label="White border"
+                        valueLabel="4 modules"
+                        describedby="form-status"
+                      >
+                        <option value="4" selected>
+                          4 modules
+                        </option>
+                        <option value="8">8 modules</option>
+                        <option value="12">12 modules</option>
+                      </SelectControl>
+                    </div>
+                  </div>
+                  <p id="correction-help" class="supporting">
+                    M is the default for everyday use. Q or H adds recovery for
+                    dirt or damage, but can make the pattern denser. Approximate
+                    recovery rates refer to codewords, not an area you can
+                    cover. Keep the white border of at least four modules and
+                    test your print.
+                  </p>
+                  <div class="advanced-controls">
+                    <div class="field">
+                      <label for="qr-version-control">QR version</label>
+                      <SelectControl
+                        id="qr-version"
+                        label="QR version"
+                        valueLabel="Auto"
+                        describedby="structure-help form-status"
+                      >
+                        <option value="auto" selected>
+                          Auto
+                        </option>
+                        {Array.from({ length: 40 }, (_, i) => (
+                          <option value={i + 1}>{i + 1}</option>
+                        ))}
+                      </SelectControl>
+                    </div>
+                    <div class="field">
+                      <label for="mask-pattern-control">Mask pattern</label>
+                      <SelectControl
+                        id="mask-pattern"
+                        label="Mask pattern"
+                        valueLabel="Auto"
+                        describedby="structure-help form-status"
+                      >
+                        <option value="auto" selected>
+                          Auto
+                        </option>
+                        {Array.from({ length: 8 }, (_, i) => (
+                          <option value={i}>{i}</option>
+                        ))}
+                      </SelectControl>
+                    </div>
+                  </div>
+                  <p id="structure-help" class="supporting">
+                    Leave version and mask on Auto unless a specification
+                    requires them. Auto selects the smallest version that fits.
+                    Versions 1-40 control the module grid. Masks 0-7 change its
+                    pattern, not its content. Content is limited to 2,000 UTF-8
+                    bytes, and must also fit the selected version and correction
+                    level.
+                  </p>
+                </details>
+                <div class="form-actions">
+                  <button id="generate" class="primary" type="submit" disabled>
+                    Create QR code
+                  </button>
+                  <button id="clear" class="quiet" type="reset">
+                    Clear
+                  </button>
+                </div>
+                <p
+                  id="form-status"
+                  class="status supporting"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  Your content stays in this browser.
+                </p>
+              </form>
+              <noscript>
+                <p>
+                  Enable JavaScript to create a QR code locally in your browser.
+                </p>
+              </noscript>
+            </section>
+            <section
+              id="preview-panel"
+              class="preview"
+              aria-labelledby="preview-heading"
+              tabindex="-1"
+            >
+              <h2 id="preview-heading">Your QR code</h2>
+              <div class="qr-stage">
+                <div id="empty-preview" class="empty-preview">
+                  <QrCode size={40} stroke-width={1.5} aria-hidden="true" />
+                  <p>Your code will appear here.</p>
+                </div>
+                <img
+                  id="qr-image"
+                  src={asset('brand/mark.svg')}
+                  width="280"
+                  height="280"
+                  alt="Generated QR code"
+                  hidden
+                />
+              </div>
+              <div class="export-size">
+                <label for="image-size-control">PNG size</label>
+                <SelectControl
+                  id="image-size"
+                  label="PNG size"
+                  valueLabel="1024 pixels"
+                >
+                  <option value="512">512 pixels</option>
+                  <option value="1024" selected>
+                    1024 pixels
+                  </option>
+                  <option value="2048">2048 pixels</option>
+                </SelectControl>
+              </div>
+              <div class="download-actions">
+                <button
+                  id="download-png"
+                  class="primary"
+                  type="button"
+                  disabled
+                >
+                  <Download size={18} aria-hidden="true" />
+                  Download PNG
+                </button>
+                <button
+                  id="download-svg"
+                  class="secondary"
+                  type="button"
+                  disabled
+                >
+                  <Download size={18} aria-hidden="true" />
+                  Download SVG
+                </button>
+              </div>
+              <p class="supporting export-help">
+                PNG for everyday use. SVG stays sharp at any print size.
+              </p>
+              <details id="encoded-details" hidden>
+                <summary>Encoded content</summary>
+                <p data-user-content id="encoded-content"></p>
+              </details>
+              <details id="technical-details" hidden>
+                <summary>Technical details</summary>
+                <dl class="code-facts">
+                  <div>
+                    <dt>Format</dt>
+                    <dd>QR Code Model 2</dd>
+                  </div>
+                  <div>
+                    <dt>Content</dt>
+                    <dd id="code-bytes"></dd>
+                  </div>
+                  <div>
+                    <dt>Version and grid</dt>
+                    <dd id="code-version"></dd>
+                  </div>
+                  <div>
+                    <dt>Error correction</dt>
+                    <dd id="code-correction"></dd>
+                  </div>
+                  <div>
+                    <dt>Mask</dt>
+                    <dd id="code-mask"></dd>
+                  </div>
+                  <div>
+                    <dt>White border</dt>
+                    <dd id="code-border"></dd>
+                  </div>
+                  <div>
+                    <dt>PNG modules</dt>
+                    <dd id="code-scale"></dd>
+                  </div>
+                </dl>
+              </details>
+            </section>
+          </div>
+          <section class="notes" aria-labelledby="notes-heading">
+            <h2 id="notes-heading" class="visually-hidden">
+              About your QR code
+            </h2>
+            <details>
+              <summary>Which content type should I choose?</summary>
+              <p>
+                URL or text keeps what you enter unchanged. Wi-Fi prepares
+                network details. Email, phone and SMS prepare an action in a
+                compatible app. Contact creates a vCard, Location uses
+                coordinates, and Calendar event creates an iCalendar event.
+                Reader support varies, so test the action on the devices you
+                expect to use.
+              </p>
             </details>
-            <details id="technical-details" hidden>
-              <summary>Technical details</summary>
-              <dl class="code-facts">
-                <div>
-                  <dt>Format</dt>
-                  <dd>QR Code Model 2</dd>
-                </div>
-                <div>
-                  <dt>Content</dt>
-                  <dd id="code-bytes"></dd>
-                </div>
-                <div>
-                  <dt>Version and grid</dt>
-                  <dd id="code-version"></dd>
-                </div>
-                <div>
-                  <dt>Error correction</dt>
-                  <dd id="code-correction"></dd>
-                </div>
-                <div>
-                  <dt>Mask</dt>
-                  <dd id="code-mask"></dd>
-                </div>
-                <div>
-                  <dt>White border</dt>
-                  <dd id="code-border"></dd>
-                </div>
-                <div>
-                  <dt>PNG modules</dt>
-                  <dd id="code-scale"></dd>
-                </div>
-              </dl>
+            <details>
+              <summary>Can a QR code contain an image or PDF?</summary>
+              <p>
+                Choose File link for an image, PDF or other file's direct web
+                address. The file needs to be hosted elsewhere and accessible to
+                the people scanning it. A traditional QR code has limited data
+                capacity. This tool does not embed the file, upload it or add a
+                redirect service.
+              </p>
+            </details>
+            <details>
+              <summary>
+                What do error correction, version and mask mean?
+              </summary>
+              <p>
+                L, M, Q and H offer increasing data recovery with less room for
+                content at the same version. A version is the grid size, from 21
+                x 21 modules at version 1 to 177 x 177 at version 40. The mask
+                balances dark and light patterns. Auto chooses a fitting version
+                and a mask. The white border always keeps at least four modules.
+                See{' '}
+                <a href="https://www.qrcode.com/en/about/error_correction.html">
+                  DENSO WAVE's correction guide
+                </a>
+                and{' '}
+                <a href="https://www.qrcode.com/en/about/version.html">
+                  version guide
+                </a>
+                .
+              </p>
+            </details>
+            <details>
+              <summary>Will my QR code expire?</summary>
+              <p>
+                The content is stored directly in the QR pattern. There is no
+                trial, subscription or VINASIG redirect to keep active. A linked
+                website can still move, expire or go offline. Editing a static
+                code requires creating and sharing a new image.
+              </p>
+            </details>
+            <details>
+              <summary>Before you print</summary>
+              <p>
+                Scan the downloaded image from another device and test a sample
+                at its final printed size. Keep the white border. Shorter links
+                make simpler codes, and black on white gives strong contrast.
+              </p>
+            </details>
+            <details>
+              <summary>What stays private?</summary>
+              <p>
+                Generation runs on your device. We do not upload your content,
+                save a history, set app cookies or add scan tracking. Website
+                hosting still receives normal page requests. The code itself
+                contains your content, so share sensitive codes with care.
+              </p>
             </details>
           </section>
-        </div>
-        <section class="notes" aria-labelledby="notes-heading">
-          <h2 id="notes-heading" class="visually-hidden">
-            About your QR code
-          </h2>
-          <details>
-            <summary>Which content type should I choose?</summary>
-            <p>
-              URL or text keeps what you enter unchanged. Wi-Fi prepares network
-              details. Email, phone and SMS prepare an action in a compatible
-              app. Contact creates a vCard, Location uses coordinates, and
-              Calendar event creates an iCalendar event. Reader support varies,
-              so test the action on the devices you expect to use.
-            </p>
-          </details>
-          <details>
-            <summary>Can a QR code contain an image or PDF?</summary>
-            <p>
-              Choose File link for an image, PDF or other file's direct web
-              address. The file needs to be hosted elsewhere and accessible to
-              the people scanning it. A traditional QR code has limited data
-              capacity. This tool does not embed the file, upload it or add a
-              redirect service.
-            </p>
-          </details>
-          <details>
-            <summary>What do error correction, version and mask mean?</summary>
-            <p>
-              L, M, Q and H offer increasing data recovery with less room for
-              content at the same version. A version is the grid size, from 21 x
-              21 modules at version 1 to 177 x 177 at version 40. The mask
-              balances dark and light patterns. Auto chooses a fitting version
-              and a mask. The white border always keeps at least four modules.
-              See{' '}
-              <a href="https://www.qrcode.com/en/about/error_correction.html">
-                DENSO WAVE's correction guide
-              </a>
-              and{' '}
-              <a href="https://www.qrcode.com/en/about/version.html">
-                version guide
-              </a>
-              .
-            </p>
-          </details>
-          <details>
-            <summary>Will my QR code expire?</summary>
-            <p>
-              The content is stored directly in the QR pattern. There is no
-              trial, subscription or VINASIG redirect to keep active. A linked
-              website can still move, expire or go offline. Editing a static
-              code requires creating and sharing a new image.
-            </p>
-          </details>
-          <details>
-            <summary>Before you print</summary>
-            <p>
-              Scan the downloaded image from another device and test a sample at
-              its final printed size. Keep the white border. Shorter links make
-              simpler codes, and black on white gives strong contrast.
-            </p>
-          </details>
-          <details>
-            <summary>What stays private?</summary>
-            <p>
-              Generation runs on your device. We do not upload your content,
-              save a history, set app cookies or add scan tracking. Website
-              hosting still receives normal page requests. The code itself
-              contains your content, so share sensitive codes with care.
-            </p>
-          </details>
-        </section>
-      </main>
-      <footer class="site-footer">
-        <p>A VINASIG tool. Made to stay simple.</p>
-        <a href="https://github.com/VINASIG/qr-generator/issues">
-          Report an issue
-        </a>
-      </footer>
-    </div>
+        </main>
+        <footer class="site-footer">
+          <p>A VINASIG tool. Made to stay simple.</p>
+          <a href="https://github.com/VINASIG/qr-generator/issues">
+            Report an issue
+          </a>
+        </footer>
+      </div>
+    </Localized>
     <script>
       import '../scripts/generator.ts';
     </script>

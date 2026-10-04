@@ -26,6 +26,9 @@ import {
 } from '../lib/payloads';
 import { installSelects, focusControl } from './select-control';
 import { installDates } from './date-control';
+import { interfaceCopy } from '../lib/interface-copy.ts';
+const vietnamese = document.documentElement.lang === 'vi';
+const t = (value: string): string => interfaceCopy(value, vietnamese);
 
 installSelects();
 installDates();
@@ -77,7 +80,7 @@ let svg: Blob | null = null;
 const downloads = new Set<string>();
 
 function message(text: string, state = 'info'): void {
-  status.textContent = text;
+  status.textContent = t(text);
   status.dataset['state'] = state;
 }
 function invalidate(): void {
@@ -119,11 +122,14 @@ function updateFields(): void {
     time.closest('.field')?.toggleAttribute('hidden', allDay.checked);
     time.disabled = allDay.checked || kind.value !== 'event';
   }
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   timezone.textContent = allDay.checked
-    ? 'Start date is the first day. End date is the last day included. Times are not included in an all-day event.'
-    : "Times use this device's timezone, " +
-      Intl.DateTimeFormat().resolvedOptions().timeZone +
-      '. They are encoded as universal time.';
+    ? t(
+        'Start date is the first day. End date is the last day included. Times are not included in an all-day event.',
+      )
+    : vietnamese
+      ? `Giờ dùng múi giờ ${zone} của thiết bị và được mã hóa theo giờ UTC.`
+      : `Times use this device's timezone, ${zone}. They are encoded as universal time.`;
 }
 function selectedSize(): ImageSize {
   const value = Number(size.value);
@@ -262,19 +268,24 @@ async function create(): Promise<void> {
     encoded.textContent = payload;
     technical.hidden = false;
     const facts = {
-      'code-bytes': String(matrix.bytes) + ' UTF-8 bytes',
+      'code-bytes':
+        String(matrix.bytes) + (vietnamese ? ' byte UTF-8' : ' UTF-8 bytes'),
       'code-version':
-        'Version ' +
+        (vietnamese ? 'Phiên bản ' : 'Version ') +
         String(matrix.version) +
         ' - ' +
         String(matrix.size) +
         ' x ' +
         String(matrix.size),
       'code-correction': matrix.errorCorrectionLevel,
-      'code-mask': 'Pattern ' + String(matrix.maskPattern),
-      'code-border': String(matrix.quietZone) + ' modules minimum',
+      'code-mask':
+        (vietnamese ? 'Mặt nạ ' : 'Pattern ') + String(matrix.maskPattern),
+      'code-border':
+        String(matrix.quietZone) +
+        (vietnamese ? ' ô tối thiểu' : ' modules minimum'),
       'code-scale':
-        String(geometry(matrix, pixels).scale) + ' pixels per module',
+        String(geometry(matrix, pixels).scale) +
+        (vietnamese ? ' pixel mỗi ô' : ' pixels per module'),
     };
     for (const [id, fact] of Object.entries(facts))
       element(id, HTMLElement).textContent = fact;

@@ -32,3 +32,9 @@ The Lighthouse trace dependency exposes declarations incompatible with exact opt
 GitHub Actions are pinned to reviewed full SHAs. Dependabot proposes weekly npm and Actions updates without automatic merging. Motion, a UI framework, hosted QR services and additional agent-browser tools have no demonstrated role in the initial product.
 
 The expanded content formats and technical controls use the same locked dependencies. Pure TypeScript builds URI, vCard and iCalendar payloads; the existing encoder supplies all four correction levels and version/mask selection. Native controls avoid another UI/runtime package.
+
+## Bilingual regression
+
+Read docs/LOCALIZATION.md. Language and appearance regression tests run through the existing browser command. They cover both built locales, native navigation without scripts, metadata, localized guidance, keyboard controls, theme persistence and blocked storage. Authored textarea guidance is translated while its content remains literal. The original core and responsive assertions remain enabled.
+
+The existing performance command measures both Vietnamese and English. Each locale keeps separate mobile and desktop reports, using the same configured runs and budgets. Lab results do not establish field interaction latency.

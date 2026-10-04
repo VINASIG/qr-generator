@@ -1,0 +1,29 @@
+---
+import dictionary from '../locales/vi.json';
+import { translateHtml } from '../lib/localization.ts';
+interface Props {
+  lang: 'en' | 'vi';
+}
+const { lang } = Astro.props;
+const html = await Astro.slots.render('default');
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const routes = [
+  '/',
+  '/brand/',
+  '/foundations/',
+  '/components/',
+  '/patterns/',
+  '/elements/',
+  '/agents/',
+  '/404.html',
+];
+const links: Record<string, string> = {};
+for (const route of routes)
+  links[base + route] =
+    base + '/vi' + (route === '/404.html' ? '/404/' : route);
+for (const hash of ['tools', 'about', 'foundations'])
+  links[base + '/#' + hash] = base + '/vi/#' + hash;
+const content = lang === 'vi' ? translateHtml(html, dictionary, links) : html;
+---
+
+<Fragment set:html={content} />

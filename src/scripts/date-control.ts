@@ -7,6 +7,7 @@ import {
   utcDate,
 } from '../lib/calendar.ts';
 import type { CalendarDate } from '../lib/calendar.ts';
+import { interfaceCopy } from '../lib/interface-copy.ts';
 
 function installDate(inputId: string): void {
   function node<T extends HTMLElement>(id: string, type: { new (): T }): T {
@@ -18,7 +19,13 @@ function installDate(inputId: string): void {
     if (!(element instanceof type)) throw new Error(`Missing ${id}`);
     return element;
   }
-  const c = { dateError: 'Enter a real date in year-month-day format.' };
+  const vietnamese = document.documentElement.lang === 'vi';
+  const c = {
+    dateError: interfaceCopy(
+      'Enter a real date in year-month-day format.',
+      vietnamese,
+    ),
+  };
   const input = node('measurement-date', HTMLInputElement);
   const opener = node('date-open', HTMLButtonElement);
   const dialog = node('date-dialog', HTMLDialogElement);
@@ -26,7 +33,7 @@ function installDate(inputId: string): void {
   const error = node('date-error', HTMLParagraphElement);
   const previous = node('date-previous', HTMLButtonElement);
   const next = node('date-next', HTMLButtonElement);
-  const locale = 'en-GB';
+  const locale = vietnamese ? 'vi-VN' : 'en-GB';
   const monthFormat = new Intl.DateTimeFormat(locale, {
     month: 'long',
     year: 'numeric',
