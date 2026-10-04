@@ -8,13 +8,19 @@ The Wi-Fi Clear regression was reproduced against the first deployed build. It v
 
 The no-script regression checks JavaScript disabled and the client module blocked. Data fields have no form serialization names, and creation starts disabled until initialization finishes. Button and keyboard attempts must leave the URL unchanged and send no payload request.
 
-The single route is `/` on the canonical qr.vinasig.io.vn domain. The viewport matrix covers the five VINASIG sizes, 320 px, 440, 600, 759/760/761 around the actual layout breakpoint, 900, 1023 and 1439 px. Each width uses 100% and 200% root text with idle, error, long-success/expanded and Wi-Fi states. Export flows also check light/dark and both motion preferences. Native controls are exercised with keyboard and touch.
+The product routes are English `/` and Vietnamese `/vi/` on the canonical qr.vinasig.io.vn domain. The viewport matrix covers the five VINASIG sizes, 320 px, 440, 600, 759/760/761 around the actual layout breakpoint, 900, 1023 and 1439 px. Each width uses 100% and 200% root text with idle, error, long-success/expanded and Wi-Fi states. Export flows also check light/dark and both motion preferences. Styled controls retain native form values and are exercised with keyboard and touch.
 
 `CAPTURE_PHASE=before` records initial draft screenshots and refuses to overwrite them. Normal verification writes after screenshots. Open images as well as checking DOM bounds. Keep evidence in output/responsive, output/playwright and output/lighthouse. The initial draft had a base-path logo failure which was observed visually and fixed in the asset helper.
 
 Lighthouse keeps three comparable cold mobile and desktop reports. The adopted median budgets are LCP <= 2500 ms, CLS <= 0.1 and TBT <= 200 ms. TBT does not measure field INP. Performance reports describe their browser/throttle setup.
 
 Automated accessibility and independent screen decoder checks are partial evidence. Physical printed scans, actual Wi-Fi connection, screen readers, fresh Codex discovery, independent SI-agent use, field vitals and search dashboard outcomes require separate observations and remain NOT_RUN unless recorded.
+
+## Dropdown indicator regression
+
+`tests/browser/interface.spec.ts` runs the imported `inspectControlIndicators` on primary and expanded settings, including every visible ordinary dropdown. It asserts the expected controls and markers exist before checking geometry. The arrow's SVG box needs at least a 16 CSS px inner trailing inset and a 12 CSS px selected-value gap. Declared icon dimensions, wrapping, initial disabled HTML and keyboard behavior remain required.
+
+`tests/browser/control-indicators.spec.ts` adds real-controller cases for long selected values with 200% text at 320 px, Wi-Fi security, both locales/themes and script-unavailable HTML at 390 px. These cases run through the existing three-engine browser command. Open their `long-enlarged.png`, `long-enlarged-open.png` and `initial-html.png` alongside the before/after captures. Geometry does not replace visual inspection.
 
 ## Expanded content and settings regression
 

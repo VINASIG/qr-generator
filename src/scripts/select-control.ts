@@ -18,6 +18,7 @@ export function installSelects(root: ParentNode = document): void {
     trigger.setAttribute('aria-haspopup', 'listbox');
     trigger.setAttribute('aria-expanded', 'false');
     const value = document.createElement('span');
+    value.setAttribute('data-control-value', '');
     trigger.append(value);
     // Lucide chevron-down geometry. The icon is decorative.
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -31,6 +32,7 @@ export function installSelects(root: ParentNode = document): void {
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',
       'aria-hidden': 'true',
+      'data-control-indicator': '',
     }))
       icon.setAttribute(name, setting);
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');

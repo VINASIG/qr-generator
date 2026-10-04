@@ -31,7 +31,7 @@ const { id, label, valueLabel, describedby, timeFor } = Astro.props;
   aria-describedby={describedby}
   disabled
 >
-  <span>{valueLabel}</span>
-  <ChevronDown size={20} aria-hidden="true" />
+  <span data-control-value>{valueLabel}</span>
+  <ChevronDown size={20} aria-hidden="true" data-control-indicator />
 </button>
 <div id={id + '-options'} class="select-options" hidden></div>

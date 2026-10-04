@@ -4,6 +4,7 @@ import { startServer } from '../../scripts/serve.ts';
 import {
   inspectInterface,
   inspectHeaderBrand,
+  inspectControlIndicators,
 } from '../../.vinasig/standards/templates/web/interface.mjs';
 import { captureFullPage } from '../../.vinasig/standards/templates/web/responsive.mjs';
 let app: Awaited<ReturnType<typeof startServer>>;
@@ -19,6 +20,9 @@ for (const route of ['', 'vi/'])
       [320, 800],
       [360, 800],
       [390, 844],
+      [759, 1024],
+      [760, 1024],
+      [761, 1024],
       [768, 1024],
       [1024, 768],
       [1440, 900],
@@ -46,6 +50,7 @@ for (const route of ['', 'vi/'])
           await brand.hover();
           expect(await page.evaluate(inspectHeaderBrand)).toEqual([]);
           expect(await page.evaluate(inspectInterface)).toEqual([]);
+          expect(await page.evaluate(inspectControlIndicators)).toEqual([]);
           for (const disclosure of await page.locator('details').all()) {
             if (
               (await disclosure.isVisible()) &&
@@ -55,6 +60,23 @@ for (const route of ['', 'vi/'])
           }
           await captureFullPage(page, info, 'expanded');
           expect(await page.evaluate(inspectInterface)).toEqual([]);
+          for (const id of [
+            'content-type',
+            'error-correction',
+            'quiet-zone',
+            'qr-version',
+            'mask-pattern',
+            'image-size',
+          ]) {
+            await expect(page.locator('#' + id + '-control')).toBeVisible();
+            await expect(
+              page.locator('#' + id + '-control [data-control-indicator]'),
+            ).toHaveCount(1);
+            await expect(
+              page.locator('#' + id + '-control [data-control-value]'),
+            ).toHaveCount(1);
+          }
+          expect(await page.evaluate(inspectControlIndicators)).toEqual([]);
 
           {
             for (const select of await page
@@ -66,6 +88,7 @@ for (const route of ['', 'vi/'])
               if (!(await trigger.isVisible())) continue;
               await trigger.click();
               expect(await page.evaluate(inspectInterface)).toEqual([]);
+              expect(await page.evaluate(inspectControlIndicators)).toEqual([]);
               const bounds = await page
                 .locator('#' + id + '-options')
                 .boundingBox();

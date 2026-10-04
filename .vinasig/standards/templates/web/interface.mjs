@@ -147,6 +147,111 @@ export function inspectInterface() {
   return findings;
 }
 
+/** Measure ordinary select indicators in initial and enhanced HTML. */
+export function inspectControlIndicators() {
+  /** @type {{kind: string, text: string, element: string}[]} */
+  const findings = [];
+  /** @param {Element} element */
+  const visible = (element) => {
+    const style = getComputedStyle(element);
+    if (
+      style.display === 'none' ||
+      style.visibility !== 'visible' ||
+      !element.getClientRects().length
+    )
+      return false;
+    /** @type {Element | null} */
+    let ancestor = element;
+    while (ancestor) {
+      if (
+        ancestor instanceof HTMLDetailsElement &&
+        !ancestor.open &&
+        !ancestor.querySelector('summary')?.contains(element)
+      )
+        return false;
+      ancestor = ancestor.parentElement;
+    }
+    return true;
+  };
+  const controls = new Set(document.querySelectorAll('.select-control'));
+  for (const indicator of document.querySelectorAll(
+    '[data-control-indicator]',
+  )) {
+    const control = indicator.closest('button, [role="combobox"]');
+    if (control) controls.add(control);
+  }
+  for (const control of controls) {
+    if (!visible(control)) continue;
+    /** @param {string} kind @param {string} text */
+    const add = (kind, text) =>
+      findings.push({
+        kind,
+        text,
+        element: control.id || control.tagName.toLowerCase(),
+      });
+    const indicator = control.querySelector('[data-control-indicator]');
+    const value = control.querySelector('[data-control-value]');
+    if (!indicator || !value) {
+      add(
+        'control-indicator-markup',
+        'Missing measurable selected value or indicator',
+      );
+      continue;
+    }
+    if (!visible(indicator) || !visible(value)) {
+      add('control-indicator-hidden', 'Selected value or indicator is hidden');
+      continue;
+    }
+    const box = control.getBoundingClientRect();
+    const icon = indicator.getBoundingClientRect();
+    const text = value.getBoundingClientRect();
+    const style = getComputedStyle(control);
+    const left = box.left + parseFloat(style.borderLeftWidth);
+    const right = box.right - parseFloat(style.borderRightWidth);
+    const rtl = style.direction === 'rtl';
+    const inset = rtl ? icon.left - left : right - icon.right;
+    const gap = rtl ? text.left - icon.right : icon.left - text.right;
+    // Only accommodate floating point representation, never a layout pixel.
+    const epsilon = 0.01;
+    if (inset + epsilon < 16)
+      add(
+        'control-indicator-inset',
+        `Trailing inset is ${inset.toFixed(2)} CSS px, expected at least 16`,
+      );
+    if (gap + epsilon < 12)
+      add(
+        'control-indicator-gap',
+        `Value gap is ${gap.toFixed(2)} CSS px, expected at least 12`,
+      );
+    const declaredWidth = Number(indicator.getAttribute('width'));
+    const declaredHeight = Number(indicator.getAttribute('height'));
+    if (
+      !(declaredWidth > 0 && declaredHeight > 0) ||
+      icon.width + epsilon < declaredWidth ||
+      icon.height + epsilon < declaredHeight
+    )
+      add(
+        'control-indicator-size',
+        'Indicator must keep its declared dimensions',
+      );
+    if (
+      icon.left < left - epsilon ||
+      icon.right > right + epsilon ||
+      icon.top < box.top + parseFloat(style.borderTopWidth) - epsilon ||
+      icon.bottom >
+        box.bottom - parseFloat(style.borderBottomWidth) + epsilon ||
+      text.left < left - epsilon ||
+      text.right > right + epsilon ||
+      value.scrollWidth > text.width + 1
+    )
+      add(
+        'control-indicator-clipping',
+        'Value or indicator exceeds its control',
+      );
+  }
+  return findings;
+}
+
 /** Inspect the explicit VINASIG header logo after its image has loaded.
  * The consumer must separately pin and verify the original asset bytes.
  * This checks presentation, variant selection and geometry, not artwork rights.

@@ -15,4 +15,6 @@ Apply WEB-001 to the header logo. Verify the original asset digest and inspect t
 
 Fix the source cause and shared components. Do not clip page overflow, transform-scale the page, hide content, or weaken an assertion. Repeat the same affected matrix after each group of fixes. Add role/name based regression checks using the local web templates where they fit. Run axe plus manual focus, keyboard, contrast/reflow checks. Axe alone is partial coverage.
 
+Measure ordinary dropdown indicators with `inspectControlIndicators` from the local `templates/web/interface.mjs`. WEB-008 requires at least 16 CSS px from the SVG box to the inner trailing border and 12 CSS px from the selected-value box, with declared icon dimensions and no clipping. Use spacing tokens, logical inline-end padding, `data-control-value` and `data-control-indicator` in both initial and enhanced markup. Test disabled/script-unavailable states, long selections and 200% text sizing. Open before/after screenshots at a scale that shows the inset. Compact platform-reference specimens retain their documented metrics.
+
 Output route/viewport/engine/state results, before/after evidence and tests, unrun device/assistive checks and concrete blockers. Chromium emulation never establishes real iPhone/Safari behavior. Review screenshot baselines before approving them.

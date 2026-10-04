@@ -23,6 +23,10 @@ Custom controls must retain labels, keyboard behavior, focus restoration, touch 
 
 Render a styled, meaningful initial control in HTML. Attach its handlers before enabling it. Delayed, blocked or disabled JavaScript must not expose an operating-system popup or an apparently usable control without its handler. Retain working direct entry where available, and test the initial response as well as the enhanced interface.
 
+For ordinary VINASIG form dropdowns, reserve at least 16 CSS px between the indicator's SVG box and the inner trailing border, and at least 12 CSS px between its box and the selected-value box. Reuse spacing tokens and logical inline-end padding. Keep the indicator at its declared dimensions without flex shrinking, text overlap or clipping. Check the actual computed geometry rather than assuming that padding or `space-between` provides it. Initial HTML and the enhanced control must keep the same spacing. Compact platform-reference specimens retain their documented platform metrics and must not be used as the ordinary form baseline.
+
+Mark the selected value with `data-control-value` and its SVG with `data-control-indicator` in ordinary `.select-control` triggers. Run `inspectControlIndicators` from `templates/web/interface.mjs` on initial, open, selected and script-unavailable states. The guard measures visible marked controls, including disabled controls, and checks missing markers, trailing inset, value gap, declared icon size and clipping. Test long selected labels, 200% text sizing, all supported locales/themes, narrow layouts and actual breakpoint neighbors. Open before/after screenshots at a useful scale. Passing accessibility or page-overflow checks alone does not establish correct control spacing.
+
 ## Responsive evidence
 
 WEB-004 MUST test representative routes/templates and shared components at 360x800, 390x844, 768x1024, 1024x768 and 1440x900. Add 320 CSS px reflow, both sides of actual content breakpoints, intermediate widths, long/localized text, enlarged text and relevant landscape. Derive breakpoints from the project, not a fixed VINASIG device list.

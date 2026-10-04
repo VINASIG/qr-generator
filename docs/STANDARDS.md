@@ -1,8 +1,8 @@
 # Standards integration
 
-The project adopts the `web-typescript` profile from VINASIG/agent-standards version 0.1.0, a public preview, at commit `31b105622b1c70f6ad362eaaab429a9afa4b1a18`.
+The project adopts the `web-typescript` profile from VINASIG/agent-standards version 0.1.0, a public preview, at commit `59c4b39cfd5f6aa90050da529af1d9894cfe41fb`.
 
-The reviewed offline bundle digest is `e7d0fe4b417a782f0613a3367c458e9ff384fed1c43435f76c17252b5c7560e1`. A dry-run plan was reviewed before import. The local `.vinasig/provenance.json` pins this source and manifest digest. The marked AGENTS.md block and 38 managed payloads are checked for integrity. Seven task-specific skills are installed under `.agents/skills/`.
+The reviewed offline bundle digest is `e6cd21c55a61f02466f767029f05a2d23898fed5a6fd386f08f733dcbbbf6439`. A dry-run plan was reviewed before import. The local `.vinasig/provenance.json` pins this source and manifest digest. The marked AGENTS.md block and 47 managed payloads are checked for integrity. Seven task-specific skills are installed under `.agents/skills/`.
 
 The Astro consumer adapts the strict reference profile with Astro's strictest TypeScript config, explicit declaration checking, the Astro ESLint parser, generated-HTML validation and checks of actual CSS. Typed ESLint remains strict with zero warnings. Runtime, browser and product behavior require separate tests.
 
@@ -25,3 +25,9 @@ This reviewed snapshot adds `inspectHeaderBrand` to `templates/web/interface.mjs
 ## Licensing adopted on 4 October 2026
 
 The reviewed snapshot includes the licensing policy, LIC-001 through LIC-004, full GPL/CC texts, material map, brand policy, review template and license checker. It retains its own software/prose grants rather than setting this project's primary license. The owner separately selected this project's scopes in LICENSES.md. Use npm run check:licenses for source metadata/text verification. Web builds also verify published legal text and source notices. Original assets and existing gates remain required.
+
+## Dropdown indicator spacing clarified on 4 October 2026
+
+WEB-008 now requires at least 16 CSS px between the indicator SVG box and the inner trailing border, and 12 CSS px between selected text and the SVG box. The shared control uses existing spacing tokens and logical inline-end padding. Preserve the 20 px icon, wrapping, keyboard and form behavior in initial and enhanced HTML. Both use `data-control-value` and `data-control-indicator` markers.
+
+Run the imported `inspectControlIndicators` on actual controls. The browser suite checks every primary/advanced trigger at the standard widths and breakpoint neighbors, both locales/themes, open options, long/enlarged selected text and unavailable scripts. Missing markers, crowded spacing, shrunken icons and clipping must fail. Inspect screenshots as well as geometry. The offline update was reviewed with diff and dry-run, then verified by doctor and the existing provenance gate.

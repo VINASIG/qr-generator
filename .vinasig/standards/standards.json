@@ -306,7 +306,7 @@
       "level": "MUST",
       "summary": "Styled open and closed form controls across supported engines",
       "verification": ["automatic", "agent", "human"],
-      "evidence": "Opened dropdown, calendar, color and slider screenshots plus keyboard and form regressions",
+      "evidence": "Opened controls and initial HTML screenshots, measured dropdown indicator inset/gap/size, long/enlarged labels, keyboard and form regressions",
       "exceptions": "File, print and download browser dialogs remain platform interactions. No blanket exemption for native form popups."
     },
     {
