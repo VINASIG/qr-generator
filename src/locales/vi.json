@@ -233,5 +233,8 @@
   "Choose a supported content type.": "Chọn loại nội dung được hỗ trợ.",
   "Clear all": "Xóa tất cả",
   "Check the highlighted field.": "Kiểm tra ô được đánh dấu.",
-  "Enter a valid email address, for example hello@example.com. Use letters without accents before @.": "Nhập địa chỉ email hợp lệ, ví dụ hello@example.com. Dùng chữ không dấu trước @."
+  "Enter a valid email address, for example hello@example.com. Use letters without accents before @.": "Nhập địa chỉ email hợp lệ, ví dụ hello@example.com. Dùng chữ không dấu trước @.",
+  "Source code": "Mã nguồn",
+  "Licenses": "Giấy phép",
+  "Website information": "Thông tin website"
 }

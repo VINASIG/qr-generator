@@ -1,4 +1,6 @@
 ---
+import SiteFooter from '../components/SiteFooter.astro';
+import '../styles/site-chrome.css';
 import SelectControl from '../components/SelectControl.astro';
 import ThemeInit from '../components/ThemeInit.astro';
 import SitePreferences from '../components/SitePreferences.astro';
@@ -102,8 +104,8 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
       <a class="skip-link" href="#main">
         Skip to generator
       </a>
-      <div class="app-shell">
-        <header class="site-header">
+      <div class="app-shell" data-site-shell>
+        <header class="site-header" data-site-header>
           <a
             class="brand"
             href="https://vinasig.io.vn/"
@@ -132,7 +134,6 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
             </picture>
           </a>
           <div class="header-actions">
-            <a href="https://github.com/VINASIG/qr-generator">View source</a>
             <SitePreferences
               lang={lang}
               alternate={lang === 'vi' ? base : `${base}vi/`}
@@ -534,12 +535,12 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
             </details>
           </section>
         </main>
-        <footer class="site-footer">
-          <p>A VINASIG tool. Made to stay simple.</p>
-          <a href="https://github.com/VINASIG/qr-generator/issues">
-            Report an issue
-          </a>
-        </footer>
+        <SiteFooter
+          lang={lang}
+          source="https://github.com/VINASIG/qr-generator"
+          issues="https://github.com/VINASIG/qr-generator/issues"
+          licenses={asset('licenses/NOTICE.txt')}
+        />
       </div>
     </Localized>
     <script>

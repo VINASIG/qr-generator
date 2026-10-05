@@ -396,6 +396,7 @@ textarea[aria-invalid='true'] {
   height: auto;
   aspect-ratio: 1;
   image-rendering: pixelated;
+  scroll-margin-block: 1rem;
 }
 
 .qr-stage img[hidden] {
