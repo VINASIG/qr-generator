@@ -31,3 +31,11 @@ The reviewed snapshot includes the licensing policy, LIC-001 through LIC-004, fu
 WEB-008 now requires at least 16 CSS px between the indicator SVG box and the inner trailing border, and 12 CSS px between selected text and the SVG box. The shared control uses existing spacing tokens and logical inline-end padding. Preserve the 20 px icon, wrapping, keyboard and form behavior in initial and enhanced HTML. Both use `data-control-value` and `data-control-indicator` markers.
 
 Run the imported `inspectControlIndicators` on actual controls. The browser suite checks every primary/advanced trigger at the standard widths and breakpoint neighbors, both locales/themes, open options, long/enlarged selected text and unavailable scripts. Missing markers, crowded spacing, shrunken icons and clipping must fail. Inspect screenshots as well as geometry. The offline update was reviewed with diff and dry-run, then verified by doctor and the existing provenance gate.
+
+## Organization profile synchronization adopted on 5 October 2026
+
+The active import uses reviewed Agent Standards source commit [2027d64b7af235b23a8b4bfa4911c924ffb47d05](https://github.com/VINASIG/agent-standards/commit/2027d64b7af235b23a8b4bfa4911c924ffb47d05), version 0.1.0, with the existing `web-typescript` profile. Earlier pins in this document describe historical imports. Current source, bundle and manifest digests are recorded in [.vinasig/provenance.json](../.vinasig/provenance.json).
+
+CORE-009 and the [project publication checklist](../.vinasig/standards/templates/project-publication.md) require reviewing affected project README/repository details, the VINASIG website inventory and both organization profile languages when publishing a tool or changing its public facts. The public GitHub org profile uses `VINASIG/.github/profile/README.md`. Updates remain within current user authorization. Missing access or authorization is reported as pending.
+
+The installer update preserved the consumer profile and retained a rollback backup. Snapshot structural integrity passed. A new Codex session's instruction discovery is NOT_RUN. Original artwork, application behavior and license grants are unaffected.
