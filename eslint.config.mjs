@@ -15,7 +15,7 @@ export default defineConfig(
     ],
   },
   {
-    files: ['**/*.{ts,mjs}'],
+    files: ['**/*.{ts,mjs}', 'src/scripts/shared-preferences.js'],
     extends: [js.configs.recommended, tseslint.configs.strictTypeChecked],
     languageOptions: {
       parserOptions: {
@@ -31,6 +31,8 @@ export default defineConfig(
           'Blob',
           'document',
           'window',
+          'navigator',
+          'location',
           'Image',
           'HTMLElement',
           'HTMLButtonElement',

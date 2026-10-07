@@ -70,4 +70,4 @@ Read [LICENSE](LICENSE), [LICENSES.md](LICENSES.md), [VINASIG Brand Usage Policy
 
 ## Languages and appearance
 
-English `/` and Vietnamese `/vi/` provide the same features with localized navigation, guidance and accessible controls. Use the compact EN or VI link and adjacent theme button. Only an explicit appearance preference is stored. Inputs and files remain local and unsaved. See [localization maintenance](docs/LOCALIZATION.md).
+English `/` and Vietnamese `/vi/` provide the same features with localized navigation, guidance and accessible controls. Use the compact EN or VI link and adjacent theme button. Only deliberate theme/language preferences are stored and shared across VINASIG subdomains. Inputs and files remain local and unsaved. See [localization maintenance](docs/LOCALIZATION.md).

@@ -121,6 +121,7 @@ export async function checkLocalization(
       [secondURL, other],
     ] as const) {
       const context = await browser.newContext({
+        locale: language === 'vi' ? 'vi-VN' : 'en-US',
         viewport: { width: 390, height: 844 },
         colorScheme: 'dark',
         reducedMotion: 'reduce',

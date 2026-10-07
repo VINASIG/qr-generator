@@ -30,7 +30,6 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
 <!doctype html>
 <html lang={lang}>
   <head>
-    <ThemeInit />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{t('VINASIG QR Generator - Static QR codes, no signup')}</title>
@@ -98,6 +97,7 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
         ),
       })}
     />
+    <ThemeInit />
   </head>
   <body>
     <Localized lang={lang}>
