@@ -15,6 +15,7 @@ import '../styles/app.css';
 import '../styles/select-control.css';
 import '../styles/date-control.css';
 import '../styles/control-surfaces.css';
+import '../styles/destructive-actions.css';
 const configuredBase = import.meta.env.BASE_URL;
 const base = configuredBase.endsWith('/')
   ? configuredBase
@@ -343,7 +344,13 @@ const canonical = root + (lang === 'vi' ? 'vi/' : '');
                   Check entered content
                 </button>
                 <div class="form-actions">
-                  <button id="clear" class="clear-button" type="reset" disabled>
+                  <button
+                    id="clear"
+                    class="clear-button"
+                    type="reset"
+                    disabled
+                    data-destructive-action
+                  >
                     <Trash size={18} aria-hidden="true" />
                     <span>Clear all</span>
                   </button>
