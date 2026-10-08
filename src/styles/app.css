@@ -405,7 +405,7 @@ textarea[aria-invalid='true'] {
 
 .empty-preview {
   text-align: center;
-  color: #70696a;
+  color: var(--color-text-muted);
 }
 
 .empty-preview p {

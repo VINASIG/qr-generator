@@ -22,3 +22,7 @@ The newly copied Reversed SVG was reviewed at VINASIG/vinasig-brand-assets commi
 ## Appearance control approved on 5 October 2026
 
 The owner selected the existing TOTP and QR Scanner appearance pattern for VINASIG websites. Use decorative Lucide Sun and Moon SVGs at 20 CSS px inside a button with a target of at least 44 CSS px. Light mode shows Moon to offer dark mode. Dark mode shows Sun to offer light mode. Keep a localized action name, pressed state, visible keyboard focus and the unchanged language link. Do not replace these recognizable icons with filled squares. Regression checks inspect both icons, their visibility and dimensions before and after toggling, persistence and blocked storage.
+
+## Neutral appearance approved on 8 October 2026
+
+Read [the shared theme adoption](THEME.md) before changing interface colors. The approved Radix Gray canvas, text and control roles supersede historical warm interface neutrals. Earlier source and artwork records remain intact.
