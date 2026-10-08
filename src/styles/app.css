@@ -379,6 +379,8 @@ textarea[aria-invalid='true'] {
 }
 
 .qr-stage {
+  --color-qr-preview-muted: #646464;
+
   display: grid;
   place-items: center;
   width: min(100%, 20rem);
@@ -405,7 +407,7 @@ textarea[aria-invalid='true'] {
 
 .empty-preview {
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--color-qr-preview-muted);
 }
 
 .empty-preview p {
