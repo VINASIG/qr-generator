@@ -38,7 +38,7 @@
     "test:chrome": "node tests/site-chrome.ts"
   },
   "dependencies": {
-    "@lucide/astro": "1.50.0",
+    "@lucide/astro": "1.52.0",
     "astro": "7.3.5",
     "qrcode": "1.5.4"
   },
